@@ -10,6 +10,7 @@ export default class StartScene extends BaseScene {
     OnLoad() {
         // 提前加载更新场景
         this.onSignSuccess();
+        // this.onSignFail();
     }
     // 当验证成功时
     onSignSuccess() {
