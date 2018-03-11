@@ -7,7 +7,7 @@ export default class ProgressController extends BasePrefabController {
 
     InitState() {
         return {
-            progress: 0,
+            progress: this.progress,
         };
     }
     onStateProgressChange(newProgress: number) {

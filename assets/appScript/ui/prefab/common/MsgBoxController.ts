@@ -20,8 +20,8 @@ export default class MsgBoxController extends BasePrefabController {
     }
     InitState() {
         return {
-            content: '',
-            visible: false,
+            content: this.content,
+            visible: this.visible,
         };
     }
     onStateContentChange(newContent: string) {

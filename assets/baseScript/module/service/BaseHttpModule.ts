@@ -1,4 +1,4 @@
-import BaseComponent from './BaseClass';
+import BaseClass from '../../baseClass/BaseClass';
 const {ccclass, property} = cc._decorator;
 /**
  * getHttpPrefix : 拿到请求的前缀,'http://192.168.1.100:3000'
@@ -8,7 +8,7 @@ const {ccclass, property} = cc._decorator;
  * resolveRes ： 处理res
  */
 @ccclass
-export default abstract class BaseHttp extends BaseComponent {
+export default abstract class BaseHttpModule extends BaseClass {
     constructor() {
         super();
         this.init();
@@ -33,8 +33,11 @@ export default abstract class BaseHttp extends BaseComponent {
         }
     
         const error = new Error(response.statusText);
-        error.response = response;
-        throw error;
+        const throwErr = {
+            ...error,
+            response,
+        };
+        throw throwErr;
     }
     protected async request(url: string, options?: any) {
         const response = await fetch(url, options);
