@@ -59,17 +59,17 @@
         "__id__": 3
       },
       {
-        "__id__": 5
+        "__id__": 6
       }
     ],
     "_tag": -1,
     "_active": true,
     "_components": [
       {
-        "__id__": 8
+        "__id__": 9
       },
       {
-        "__id__": 9
+        "__id__": 10
       }
     ],
     "_prefab": null,
@@ -122,6 +122,9 @@
     "_components": [
       {
         "__id__": 4
+      },
+      {
+        "__id__": 5
       }
     ],
     "_prefab": null,
@@ -142,8 +145,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 900,
-      "height": 650
+      "width": 960,
+      "height": 640
     },
     "_rotationX": 0,
     "_rotationY": 0,
@@ -173,7 +176,7 @@
       "__uuid__": "befd4edd-0358-413c-8762-5947b61e0611"
     },
     "_type": 0,
-    "_sizeMode": 1,
+    "_sizeMode": 0,
     "_fillType": 0,
     "_fillCenter": {
       "__type__": "cc.Vec2",
@@ -188,6 +191,32 @@
     "_atlas": null
   },
   {
+    "__type__": "cc.Widget",
+    "_name": "",
+    "_objFlags": 0,
+    "node": {
+      "__id__": 3
+    },
+    "_enabled": true,
+    "isAlignOnce": true,
+    "_target": null,
+    "_alignFlags": 45,
+    "_left": 0,
+    "_right": 0,
+    "_top": 0,
+    "_bottom": 0,
+    "_verticalCenter": 0,
+    "_horizontalCenter": 0,
+    "_isAbsLeft": true,
+    "_isAbsRight": true,
+    "_isAbsTop": true,
+    "_isAbsBottom": true,
+    "_isAbsHorizontalCenter": true,
+    "_isAbsVerticalCenter": true,
+    "_originalWidth": 900,
+    "_originalHeight": 650
+  },
+  {
     "__type__": "cc.Node",
     "_name": "piaohua",
     "_objFlags": 0,
@@ -199,11 +228,11 @@
     "_active": true,
     "_components": [
       {
-        "__id__": 6
+        "__id__": 7
       }
     ],
     "_prefab": {
-      "__id__": 7
+      "__id__": 8
     },
     "_id": "d0Mr6OmkxHXa9K9TxJQg2L",
     "_opacity": 255,
@@ -246,13 +275,10 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 5
+      "__id__": 6
     },
     "_enabled": true,
     "_custom": true,
-    "_texture": {
-      "__uuid__": "9027e28e-9d05-4617-9730-4d42f328e42b"
-    },
     "_srcBlendFactor": 1,
     "_dstBlendFactor": 1,
     "playOnLoad": true,
@@ -335,7 +361,7 @@
   {
     "__type__": "cc.PrefabInfo",
     "root": {
-      "__id__": 5
+      "__id__": 6
     },
     "asset": {
       "__uuid__": "a534d1ab-f90a-4c4e-a4de-75bf2865b4f8"
