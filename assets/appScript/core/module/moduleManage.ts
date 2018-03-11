@@ -2,14 +2,17 @@ import BaseModuleManage from '../../../baseScript/module/BaseModuleManage';
 import ClientManage from '../module/business/ClientManage';
 import LoginModule from '../module/business/LoginModule';
 import SceneModule from '../module/service/SceneModule';
-import ToolService from './service/ToolService';
+import ToolModule from './service/ToolModule';
 import AudioModule from '../module/service/AudioModule';
+import EnumModule from '../module/business/EnumModule';
+
 
 enum ModuleDef {
     LoginModule = 'LoginModule',
     SceneModule = 'SceneModule',
-    ToolService = 'ToolService',
+    ToolModule = 'ToolModule',
     AudioModule = 'AudioModule',
+    EnumModule = 'EnumModule',
 };
 
 class ModuleManage extends BaseModuleManage {
@@ -17,12 +20,13 @@ class ModuleManage extends BaseModuleManage {
     LoginModule: LoginModule;
     ClientManage: ClientManage;
     SceneModule: SceneModule;
-    ToolService: ToolService;
+    ToolModule: ToolModule;
     AudioModule: AudioModule;
+    EnumModule: any = {};
     // 共有的模块(默认会初始化)
     public commonModules: ModuleDef[] = [
         ModuleDef.SceneModule,
-        ModuleDef.ToolService,
+        ModuleDef.ToolModule,
     ];
     // 初始化模块
     constructor() {

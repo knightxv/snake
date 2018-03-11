@@ -8,7 +8,7 @@ export default class LoginScene extends BaseScene {
         return [AudioModule];
     }
     OnLoad() {
-        this.moduleManage.AudioModule.playBg();
+        // this.moduleManage.AudioModule.playBg();
         this.node.once(cc.Node.EventType.TOUCH_END, () => {
             this.showLoading();
             this.scheduleOnce(() => {
