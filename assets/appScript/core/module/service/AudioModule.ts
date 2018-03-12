@@ -1,7 +1,7 @@
 import BaseAudioModule from '../../../../baseScript/module/service/BaseAudioModule';
 
 enum AudioSource {
-    bg = 'audio/common/bg.mp3',
+    bg = 'ui/common/audio/bg.mp3',
 };
 
 export default class AudioModule extends BaseAudioModule {

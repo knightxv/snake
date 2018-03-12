@@ -1,5 +1,5 @@
-import BaseBusinessModule from '../../../baseScript/module/BaseBusinessModule';
-import moduleManage from '../module/moduleManage';
+import BaseBusinessModule from '../../baseScript/module/BaseBusinessModule';
+import moduleManage from '../core/module/moduleManage';
 const {ccclass, property} = cc._decorator;
 
 @ccclass
