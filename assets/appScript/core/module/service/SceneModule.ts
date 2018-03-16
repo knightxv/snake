@@ -15,6 +15,28 @@ export default class SceneModule extends BaseSceneModule {
     EnterFight() {
         this.loadScene('FightScene');
     }
+    // 进入无尽模式
+    EnterEndLessGame() {
+        this.loadScene('EndLessGame');
+    }
+    // 进入单人限时
+    EnterTimeLimitSingleGame() {
+        this.loadScene('TimeLimitSingleGame');
+    }
+    // 进入团队限时
+    EnterTimeLimitTeamGame() {
+        this.loadScene('TimeLimitTeamGame');
+    }
+
+
+
+
+
+
+
+
+
+    // 旋转逻辑(还未验证)
     IsWindows() {
         return false;
     }

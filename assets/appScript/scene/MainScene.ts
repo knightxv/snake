@@ -6,19 +6,27 @@ const {ccclass, property} = cc._decorator;
 export default class MainScene extends BaseScene {
     OnLoad() {
         this.Log('进入主大厅');
-        this.node.on('pveGameStart', (ev) => {
-            this.pveGameStart();
+        this.node.on('endlessGame', (ev) => {
+            this.endlessGame();
             ev.stopPropagation();
         });
-        this.node.on('pvpGameStart', (ev) => {
-            this.pvpGameStart();
+        this.node.on('timeLimitSingle', (ev) => {
+            this.timeLimitSingle();
+            ev.stopPropagation();
+        });
+        this.node.on('timeLimitTeam', (ev) => {
+            this.timeLimitTeam();
             ev.stopPropagation();
         });
     }
-    pveGameStart = () => {
-        this.Log('开始单人游戏');
+    endlessGame = () => {
+        // 进入无尽模式
+        this.moduleManage.SceneModule.EnterEndLessGame();
     }
-    pvpGameStart() {
-        this.Log('开始多人游戏');
+    timeLimitSingle() {
+        this.moduleManage.SceneModule.EnterTimeLimitSingleGame();
+    }
+    timeLimitTeam() {
+        this.moduleManage.SceneModule.EnterTimeLimitTeamGame();
     }
 }

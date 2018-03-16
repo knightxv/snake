@@ -5,7 +5,9 @@ import SceneModule from '../module/service/SceneModule';
 import ToolModule from './service/ToolModule';
 import AudioModule from '../module/service/AudioModule';
 import EnumModule from '../module/business/EnumModule';
-
+import GameModule from './business/GameModule';
+import NetModule from './service/NetModule';
+import CmdModule from './business/CmdModule';
 
 enum ModuleDef {
     LoginModule = 'LoginModule',
@@ -13,6 +15,9 @@ enum ModuleDef {
     ToolModule = 'ToolModule',
     AudioModule = 'AudioModule',
     EnumModule = 'EnumModule',
+    GameModule = 'GameModule',
+    NetModule = 'NetModule',
+    CmdModule = 'CmdModule',
 };
 
 class ModuleManage extends BaseModuleManage {
@@ -22,6 +27,9 @@ class ModuleManage extends BaseModuleManage {
     SceneModule: SceneModule;
     ToolModule: ToolModule;
     AudioModule: AudioModule;
+    GameModule: GameModule;
+    NetModule: NetModule;
+    CmdModule: CmdModule;
     EnumModule: any = {};
     // 共有的模块(默认会初始化)
     public commonModules: ModuleDef[] = [

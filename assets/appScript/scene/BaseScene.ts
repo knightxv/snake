@@ -1,9 +1,9 @@
-import BaseBusinessModule from '../../baseScript/module/BaseBusinessModule';
+import BaseComponent from '../core/BaseComponent';
 import moduleManage from '../core/module/moduleManage';
 const {ccclass, property} = cc._decorator;
 
 @ccclass
-export default class BaseScene extends BaseBusinessModule {
+export default class BaseScene extends BaseComponent {
     moduleManage = moduleManage;
     // 需要加载哪些模块(返回数组)
     protected needModules(ModuleDef?: any) {
