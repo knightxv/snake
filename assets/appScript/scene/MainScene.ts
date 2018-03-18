@@ -21,11 +21,9 @@ export default class MainScene extends BaseScene {
     }
     endlessGame = () => {
         // 进入无尽模式
-        this.Log('无尽模式');
         this.moduleManage.SceneModule.EnterEndLessGame();
     }
     timeLimitSingle() {
-        this.Log('单人模式');
         this.moduleManage.SceneModule.EnterTimeLimitSingleGame();
     }
     timeLimitTeam() {

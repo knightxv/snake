@@ -10,7 +10,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "snakeHead",
+    "_name": "snakeBody",
     "_objFlags": 0,
     "_parent": null,
     "_children": [],
@@ -58,10 +58,10 @@
     "_localZOrder": 0,
     "_globalZOrder": 0,
     "_opacityModifyRGB": false,
-    "groupIndex": 0
+    "groupIndex": 1
   },
   {
-    "__type__": "c92c5wlTCVGo71IyVbGPXDI",
+    "__type__": "9c224CrwDFFGKElISRN1Wva",
     "_name": "",
     "_objFlags": 0,
     "node": {
@@ -75,9 +75,9 @@
       "__id__": 1
     },
     "asset": {
-      "__uuid__": "c8c58257-6335-4de4-9560-4718e8b8a7b7"
+      "__uuid__": "eadd62ac-cb97-4853-9e26-256cda5ef547"
     },
-    "fileId": "d11RAO2qRI3LeosGFebYJj",
+    "fileId": "05kupm17ZOsbueKURdLD2N",
     "sync": false
   }
 ]

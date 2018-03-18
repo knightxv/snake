@@ -1,4 +1,4 @@
-import gameContext from '../gameContext';
+import gameContext from '../../gameContext';
 const {ccclass, property} = cc._decorator;
 const partType = gameContext.SnakePart;
 @ccclass
@@ -6,6 +6,14 @@ export default class SnakeNode extends cc.Component {
     // 设置目标坐标（缓慢移动过去）
     public partType = partType.body;
     private targetPoint: cc.Vec2 | null = null;
+    onLoad() {
+        const circleCollider = this.node.addComponent(cc.CircleCollider);
+        circleCollider.radius = 16;
+        this.OnLoad();
+    }
+    OnLoad() {
+
+    }
     public moveNext(tarPos: cc.Vec2) {
         // 移动到指定目标
         this.node.stopAllActions();
@@ -48,9 +56,9 @@ export default class SnakeNode extends cc.Component {
         // 设置背景
         let imgRealPath = '';
         if (this.getPartType() === partType.head) {
-            imgRealPath = cc.url.raw('resources/game/snake/textures/head.fw.png')
+            imgRealPath = cc.url.raw('resources/game/element/snake/textures/head.fw.png')
         } else if (this.getPartType() === partType.body) {
-            imgRealPath = cc.url.raw('resources/game/snake/textures/node.fw.png');
+            imgRealPath = cc.url.raw('resources/game/element/snake/textures/node.fw.png');
         }
         if (!imgRealPath) {
             cc.error('没有指定部位');

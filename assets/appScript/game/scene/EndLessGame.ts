@@ -1,38 +1,33 @@
 import BaseGameScene from './BaseGameScene';
-import SnakeController from '../snake/SnakeController';
+import SnakeController from '../element/snake/SnakeController';
+import MapController from '../element/map/MapController';
 const {ccclass, property} = cc._decorator;
 
 @ccclass
 export default class EndLessGame extends BaseGameScene {
-    @property({
-        type: cc.Prefab,
-        tooltip: 'snake节点',
-    })
-    snakePrefab = null;
-    
     private gameId; // 玩家的gameId
     private snakeContainer: cc.Node = null;
     private idControllerMap = {}; // gameId与SnakeController的对照表
     private cameraController = null; // 地图控制器
+    private mapController: MapController = null; // 地图控制器
+    private controllDeg = 0; // 本蛇的控制角度
+    private isQuickSpeed = false; // 本蛇的是否加速
     protected needModules(ModuleDef?: any) {
         const { NetModule, CmdModule } = ModuleDef;
         return [NetModule, CmdModule];
     }
-    OnLoad() {
+    start() {
         // 每过30ms从游戏管理器拿到命令进行渲染。有可能一次性拿到很多，进行循环处理
-        this.snakeContainer = this.node.getChildByName('SnakeContainer');
-        if (!this.snakeContainer) {
-            this.LogError('snakeContainer节点不存在');
-            return;
-        }
-        if (!this.snakePrefab) {
-            this.LogError('snakePrefab资源不存在');
-            return;
-        }
         const camera = cc.find('camera');
         this.cameraController = camera.getComponent('CameraController');
         if (!this.cameraController) {
             this.LogError('camera控制器不存在');
+            return;
+        }
+        const map = cc.find('map', this.node);
+        this.mapController = map.getComponent('MapController');
+        if (!this.mapController) {
+            this.LogError('map控制器不存在');
             return;
         }
         this.loadGameData();
@@ -65,40 +60,41 @@ export default class EndLessGame extends BaseGameScene {
                             x: 470,
                             y: 0,
                         },
-                        {
-                            x: 460,
-                            y: 0,
-                        },
-                        {
-                            x: 450,
-                            y: 0,
-                        },
-                        {
-                            x: 440,
-                            y: 0,
-                        },
-                        {
-                            x: 430,
-                            y: 0,
-                        },
-                        {
-                            x: 420,
-                            y: 0,
-                        },
-                        {
-                            x: 410,
-                            y: 0,
-                        },
                     ], // 蛇的数据
                     teamId: '', // 组队id
                     score: 12, // 分数
-                    aiNumber: 2323, // '' ai的编号
+                    aiNumber: null, // '' ai的编号
                 },
             ],
         };
+        this.gameId = roomData.gameId;
+        this.gameContext.roomData = roomData;
         // 通过roomData创建游戏视图
         this.createSnakesByPlaysData(roomData.playsData);
         this.startGame();
+    }
+    // 开始游戏(当初始化数据都加载好的时候)
+    private startGame() {
+        this.setMapAutoFollow();
+        this.setTick();
+        this.listener();
+    }
+    // 重新开始游戏
+    protected reStartGame() {
+        this.setTick();
+    }
+    // 当自己的蛇死掉的时候
+    onSelfSnakeDie() {
+        this.cancelMapAutoFollow(); // (释放内存)
+        this.stopSendPlayCmd();
+        // 单机模式(花不花钱，主要在于新生成的蛇会不会保留数组而已)
+        cc.log('self snake die -> 弹出提示操作(花钱立即复活，不花钱重新开始)');
+        // 联机模式
+        // cc.log('self snake die -> 弹出提示操作(立即复活)');
+    }
+    // 取消地图跟随
+    private cancelMapAutoFollow() {
+        this.cameraController.setFollowTarget(null);
     }
     // 设置地图自动跟随
     private setMapAutoFollow() {
@@ -113,26 +109,24 @@ export default class EndLessGame extends BaseGameScene {
     private createSnakesByPlaysData(playsData: any[]) {
         playsData.forEach((data) => {
             const { gameId, userId, name, snakeData, teamId, score, aiNumber } = data;
-            this.gameId = gameId;
-            const snakeNode: cc.Node = cc.instantiate(this.snakePrefab);
-            const SnakeController = snakeNode.getComponent('SnakeController');
-            SnakeController.init(data);
-            this.idControllerMap[gameId] = SnakeController;
-            this.node.addChild(snakeNode);
+            const snakeController: SnakeController = this.mapController.createSnake(data);
+            this.idControllerMap[gameId] = snakeController;
         });
-    }
-    // 开始游戏(当初始化数据都加载好的时候)
-    private startGame() {
-        this.setMapAutoFollow();
-        this.setTick();
-        this.listener();
     }
     // 设置逻辑循环
     setTick() {
-        this.schedule(() => {
-            // 先把玩家信息传给服务器
-            this.moduleManage.CmdModule.sendCmd(this.controllDeg, this.isQuickSpeed);
-        }, this.gameContext.tickTime / 1000);
+        this.schedule(this.sendPlayCmdToCmdModule, this.gameContext.tickTime / 1000);
+    }
+    // 发送命令给cmdModule
+    sendPlayCmdToCmdModule() {
+        // 多人模式下
+        // this.moduleManage.CmdModule.sendCmdToServer(this.controllDeg, this.isQuickSpeed);
+        // 单人模式下
+        this.moduleManage.CmdModule.sendCmdToClient(this.gameId, this.controllDeg, this.isQuickSpeed);
+    }
+    // 停止发送玩家命令(对于单机，停止游戏，对于联机中止玩家输出，其他玩家的操作还在继续)
+    public stopSendPlayCmd() {
+        this.unschedule(this.sendPlayCmdToCmdModule);
     }
     // 监听事件
     listener() {
@@ -140,40 +134,57 @@ export default class EndLessGame extends BaseGameScene {
         CmdModule.on(CmdModule.EventType.receiveCmd, (cmd: string) => {
             this.tickLogic(cmd);
         });
+        // 当蛇杀死其他蛇时
+        const EventType = this.gameContext.EventType;
+        this.node.on(EventType.onSnakeKillOtherSnake, this.onSnakeKillOtherSnake, this);
+        // 当蛇撞墙死时
+        this.node.on(EventType.onKillByWall, this.onSnakekillByWall, this);
+    }
+    // 当有蛇被杀时
+    onSnakeKillOtherSnake(ev) {
+        const snakeKill: SnakeController = ev.detail.snakeKill;
+        const snakeKilled: SnakeController = ev.detail.snakeKilled;
+        if (!snakeKill || !snakeKilled) {
+            return;
+        }
+        if (snakeKilled.gameId === this.gameId) {
+            this.onSelfSnakeDie();
+        }
+        delete this.idControllerMap [snakeKilled.gameId];
+        // snakeKill, snakeKilled
+        this.Log(`${snakeKill.gameId}杀死了${snakeKilled.gameId}`);
+    }
+    // 当有蛇被墙撞死时
+    onSnakekillByWall(ev) {
+        const snakeController: SnakeController = ev.detail.snakeKilled;
+        if (!snakeController) {
+            return;
+        }
+        const snakeKilledGameId = snakeController.gameId;
+        if (snakeKilledGameId === this.gameId) {
+            this.onSelfSnakeDie();
+        }
+        delete this.idControllerMap [snakeKilledGameId];
+        this.Log(`${snakeKilledGameId}被墙撞死了`);
     }
     // 进行逻辑处理（只进行渲染和游戏帧率控制，就是说用这个函数可以进行加速播放和断线重连等操作）
     // 其中渲染的结果之和命令有关(每一条命令就可以进行一次帧渲染),与服务器逻辑分开，不依赖服务器
     tickLogic(cmd: string) {
         this.gameContext.tickUpdate(cmd);
-        const playerCmds = this.resolveCmds(cmd);
+        this.mapController.updateMap();
+        const playerCmds = this.moduleManage.CmdModule.resolveCmds(cmd);
         playerCmds.forEach(data => {
             const { gameId, deg, isQuick} = data;
-            this.idControllerMap[gameId] &&this.idControllerMap[gameId].moveTo(deg, isQuick);
-        });
-        // 设置跟随
-        this.setMapAutoFollow();
-    }
-    //  解析命令 1:30!&3:10&4:80,
-    private resolveCmds(cmd: string): any[] {
-        if (!cmd || !/\w+:\w+!?/.test(cmd)) {
-            this.LogError('收到的命令为' + cmd);
-            return [];
-        }
-        const splitArr: string[] = cmd.split('&');
-        return splitArr.map(splitCmd => {
-            return {
-                gameId: /\w+/.exec(cmd)[0],
-                deg: /\w+:(\w+)/.exec(cmd)[1],
-                isQuick: /!/.test(cmd),
-            };
+            if (this.idControllerMap[gameId]) {
+                this.idControllerMap[gameId].controllDeg = deg;
+                this.idControllerMap[gameId].isQuickSpeed = isQuick;
+            }
         });
     }
-    private controllDeg = 0; // 目前用户控制的方向(角度)
     // 当用户进行控制时(夹角弧度)
     onDirController(dirRad) {
         this.controllDeg = this.gameContext.getDegByRad(dirRad);
     }
-    private isQuickSpeed = false; // 是否加速
     // 当用户进行加速时
     onQuickController() {
         this.isQuickSpeed = true;
