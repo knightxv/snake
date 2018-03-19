@@ -26,10 +26,10 @@ export default class MapController extends cc.Component {
     private dieFoodPool = new cc.NodePool();
     private snakePool = new cc.NodePool();
 
-    public mapFoodCount = 20; // 每个地图的食物个数
+    public mapFoodCount = 50; // 每个地图的食物个数
     public nodeToDieFoodStep = 5; // 蛇死后每多少个节点生成一次死后食物
     public dieFoodDisRange = 10; // 蛇死后生成的节点偏移的距离范围
-    public roomMaxCount = 10; // 每个地图的最大蛇数量（单机模式15-3人）
+    public roomMaxCount = 5; // 每个地图的最大蛇数量（单机模式15-3人）
     public stepMakeAi = 100; // 每隔多少个30ms产生一次ai
     public clientFrameCount = 0; // 客户端现在是第几个帧
 
@@ -108,6 +108,7 @@ export default class MapController extends cc.Component {
             return;
         }
         this.createDieFoodBySnakeController(snakeKilled);
+        this.roomMaxCount += 1;
     }
     // 当有蛇被墙撞死时
     private onSnakekillByWall(ev) {
@@ -116,6 +117,7 @@ export default class MapController extends cc.Component {
             return;
         }
         this.createDieFoodBySnakeController(snakeController);
+        this.roomMaxCount += 1;
     }
     // 当食物被吃时(隐藏食物，放进回收池)
     private onFoodEated(ev: cc.Event.EventCustom) {
@@ -208,6 +210,9 @@ export default class MapController extends cc.Component {
     createAiSnake() {
         const gameId = this.clientFrameCount;
         const initLength = gameContext.getRandomInt(5, 15);
+        const initplaceX = gameContext.getRandomInt(1, 200);
+        const initplaceY = gameContext.getRandomInt(1, 200);
+        
         const aiSnakeData = { // 玩家数据(要包括自己的数据)
             gameId: gameId,
             userId: 233,
@@ -218,7 +223,7 @@ export default class MapController extends cc.Component {
             aiNumber: 2323, // '' ai的编号
         };
         for(let i = 0; i < initLength; i ++) {
-            aiSnakeData.snakeData.push(cc.v2(500 - i * 10, 100));
+            aiSnakeData.snakeData.push(cc.v2(500 - i * 10+initplaceX, 100+initplaceY));
         }
         
         this.createSnake(aiSnakeData);

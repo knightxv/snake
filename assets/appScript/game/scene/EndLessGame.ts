@@ -87,6 +87,7 @@ export default class EndLessGame extends BaseGameScene {
     onSelfSnakeDie() {
         this.cancelMapAutoFollow(); // (释放内存)
         this.stopSendPlayCmd();
+
         // 单机模式(花不花钱，主要在于新生成的蛇会不会保留数组而已)
         cc.log('self snake die -> 弹出提示操作(花钱立即复活，不花钱重新开始)');
         // 联机模式
