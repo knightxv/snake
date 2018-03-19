@@ -19,7 +19,6 @@ export default class AiDetectorController extends cc.Component {
             return;
         }
         const otherGroup = other.node.group;
-        console.log(otherGroup)
         if (otherGroup === 'wall') {
             const wallWaringEvent = new cc.Event.EventCustom(Event.wallWarn, true);
             this.node.dispatchEvent(wallWaringEvent);

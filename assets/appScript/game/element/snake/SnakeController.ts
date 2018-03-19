@@ -30,17 +30,15 @@ export default class SnakeController extends cc.Component {
     public isSaveState = true; // 是否是受保护状态
     public initSaveTime = 1; // 初始化的保护时间
     public snakeData: any = {};
-
+    public isKiided = false; // 是否死掉了
+    public skinStep = 2; // 多少个节点生成一个皮肤节点
+    
     private bodyNodePool = new cc.NodePool(); // 身体节点池
     private putInBodyPool(bodyNode: cc.Node) {
         this.bodyNodePool.put(bodyNode);
     }
-    private getInBodyPoll() {
-        if (this.bodyNodePool.size() > 0) {
-            return this.bodyNodePool.get();
-        }
-        return cc.instantiate(this.snakeBodyPrefab)
-    }
+    // 死掉的时候point
+    public _diePoints: cc.Vec2[]= [];
     // 转向某个角度(用于外部调用)
     public move() {
         this.realMoveTo(this.controllDeg, this.isQuickSpeed);
@@ -61,21 +59,40 @@ export default class SnakeController extends cc.Component {
         const { gameId, userId, name, snakeData, teamId, score, aiNumber } = data;
         this.gameId = gameId;
         this.score = score;
-        if (!this.snakeHeadPrefab || !this.snakeBodyPrefab) {
-            cc.error('head or body prefab not exit');
-            return;
-        }
-        
         this.isSaveState = true;
-        this.scheduleOnce(() => {
-            this.isSaveState = false;
-        }, this.initSaveTime);
+        this.eatCount = 0;
+        this.node.active = true;
+        this.isKiided = false;
         this.snakeData = data;
         this.create(snakeData);
         if (aiNumber !== null) {
             this.headerControll.addDetector(this.aiDetector);
         }
+        this.scheduleOnce(() => {
+            this.isSaveState = false;
+        }, this.initSaveTime);
         this.listener();
+    }
+    // 当死亡时(把每个节点放回实体工厂,然后发布信息信息出去)
+    private onDie() {
+        this._diePoints = this.getNodePoints();
+        // 回收每个body节点，然后隐藏全部子节点，删除头部(和尾部)
+        this.node.children.forEach(snakeNode => {
+            const snakeNodeController = snakeNode.getComponent('SnakeNode');
+            snakeNode.active = false;
+            if (snakeNodeController.getPartType() === snakeNodeType.body) {
+                this.putInBodyPool(snakeNode);
+            } else {
+                snakeNode.destroy();
+            }
+        });
+        this.node.removeAllChildren();
+        this.isKiided = true;
+        this.node.active = false;
+        this.removeListener();
+        this.preAddedControll = null;
+        this.headerControll = null;
+        this.snakeData = null;
     }
     // 监听
     listener() {
@@ -124,20 +141,16 @@ export default class SnakeController extends cc.Component {
     // 当吃食物时
     onEatFood(ev: cc.Event.EventCustom) {
         const foodController = ev.detail.controller;
+        foodController.onEated();
         const countToNode = foodController.countToNode;
         const foodScore = foodController.foodScore;
         this.eatCount += countToNode;
-        const foodEatedEvent = new cc.Event.EventCustom(gameContext.EventType.onFoodEated, true);
-        foodEatedEvent.setUserData({
-            foodController,
-        });
-        this.node.dispatchEvent(foodEatedEvent);
+        this.score += foodScore;
         if (this.eatCount < 1) {
             return;
         }
         this.foodToNode();
         this.eatCount -= 1;
-        this.score += foodScore;
         ev.stopPropagation();
     }
     // 把食物转换为节点
@@ -158,21 +171,6 @@ export default class SnakeController extends cc.Component {
         this.onDie();
         ev.stopPropagation();
     }
-    // 当死亡时(把每个节点放回实体工厂,然后发布信息信息出去)
-    private onDie() {
-        // 回收每个body节点，然后全部子节点
-        this.node.children.forEach(snakeNode => {
-            const snakeNodeController = snakeNode.getComponent('SnakeNode');
-            if (snakeNodeController.getPartType() === snakeNodeType.body) {
-                this.putInBodyPool(snakeNode);
-            }
-        });
-        this.node.removeAllChildren();
-        this.removeListener();
-        this.preAddedControll = null;
-        this.headerControll = null;
-        this.node.active = false; // 隐藏掉,把parent设为null会有问题
-    }
     // 添加节点
     private preAddedControll: SnakeNodeController | null = null;
     public createNode(type, point: cc.Vec2) {
@@ -181,33 +179,26 @@ export default class SnakeController extends cc.Component {
         let snakeNode: cc.Node | null;
         if (type === snakeNodeType.head) {
             snakeNode = cc.instantiate(this.snakeHeadPrefab);
-        } else if (type === snakeNodeType.body) {
-            snakeNode = this.getInBodyPoll();
-        }
-        if (!snakeNode) {
-            cc.error('SnakeController: snake node 不存在');
-            return;
-        }
-        snakeNode.setPosition(point);
-        this.addNode(snakeNode);
-    }
-    public addNode(snakeNode: cc.Node) {
-        const snakeNodeController = snakeNode.getComponent(SnakeNodeController);
-        const bodyLenght = this.node.childrenCount;
-        const type = snakeNodeController.getPartType();
-        if (bodyLenght % 2 === 0) {
-            snakeNodeController.setSkinEffect();
-        }
-        if (type === snakeNodeType.head) {
+            const snakeNodeController = snakeNode.getComponent(SnakeHeadNodeController);
+            snakeNodeController.setSkinEffect(); // 可以省略(让蛇头自己加载)
             this.preAddedControll = snakeNodeController;
             this.headerControll = snakeNodeController;
+            
         } else if (type === snakeNodeType.body) {
+            snakeNode = this.bodyNodePool.get() || cc.instantiate(this.snakeBodyPrefab);
+            const snakeNodeController = snakeNode.getComponent(SnakeNodeController);
             if (this.preAddedControll) {
                 this.preAddedControll.setNextController(snakeNodeController);
                 this.preAddedControll = snakeNodeController;
             }
+            const bodyLenght = this.node.childrenCount;
+            if (bodyLenght % this.skinStep === 0) {
+                snakeNodeController.setSkinEffect();
+            }
         }
-        snakeNode.parent = this.node;
+        this.node.addChild(snakeNode);
+        snakeNode.setPosition(point);
+        snakeNode.active = true;
     }
     // 通过一段数组position来创建蛇 cc.v2[]
     public create(snakeInitPoints: cc.Vec2[]) {
@@ -225,5 +216,9 @@ export default class SnakeController extends cc.Component {
         return this.node.children.map(childNode => {
             return this.node.convertToWorldSpaceAR(childNode.position);
         })
+    }
+    // 得到死的时候节点们世界point
+    public getDiePoints() {
+        return this._diePoints;
     }
 }

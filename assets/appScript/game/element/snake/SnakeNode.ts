@@ -6,14 +6,14 @@ export default class SnakeNode extends cc.Component {
     // 设置目标坐标（缓慢移动过去）
     public partType = partType.body;
     private targetPoint: cc.Vec2 | null = null;
+    private nextControll: SnakeNode | null = null;
+    private bgNode: cc.Node;
     onLoad() {
         const circleCollider = this.node.addComponent(cc.CircleCollider);
         circleCollider.radius = 16;
         this.OnLoad();
     }
-    OnLoad() {
-
-    }
+    OnLoad() {}
     public moveNext(tarPos: cc.Vec2) {
         // 移动到指定目标
         this.node.stopAllActions();
@@ -34,7 +34,6 @@ export default class SnakeNode extends cc.Component {
             this.nextControll.moveNext(nextTarPos);
         }
     }
-    private nextControll: SnakeNode | null = null;
     public setNextController(nextController) {
         this.nextControll = nextController;
     }
@@ -53,6 +52,10 @@ export default class SnakeNode extends cc.Component {
     }
     // 设置皮肤特效
     setSkinEffect() {
+        if (this.bgNode) {
+            this.bgNode.active = true;
+            return;
+        }
         // 设置背景
         let imgRealPath = '';
         if (this.getPartType() === partType.head) {
@@ -70,7 +73,14 @@ export default class SnakeNode extends cc.Component {
             const spriteFrame = new cc.SpriteFrame(texture);
             bgSprite.spriteFrame = spriteFrame;
             this.node.addChild(bgNode);
+            this.bgNode = bgNode;
         }, this);
+    }
+    onDisable() {
+        this.nextControll = null;
+        if (this.bgNode) {
+            this.bgNode.active = false;
+        }
     }
     // update() {
     //     // if (this.targetPoint) {

@@ -1,5 +1,6 @@
 import gameContext from '../../gameContext';
 import SnakeController from '../snake/SnakeController';
+import FoodController from '../food/FoodController';
 const {ccclass, property} = cc._decorator;
 
 @ccclass
@@ -29,7 +30,7 @@ export default class MapController extends cc.Component {
     public mapFoodCount = 20; // 每个地图的食物个数
     public nodeToDieFoodStep = 5; // 蛇死后每多少个节点生成一次死后食物
     public dieFoodDisRange = 10; // 蛇死后生成的节点偏移的距离范围
-    public roomMaxCount = 10; // 每个地图的最大蛇数量（单机模式15-3人）
+    public roomMaxCount = 10; // 每个地图的最大蛇数量（单机模式10人）
     public stepMakeAi = 100; // 每隔多少个30ms产生一次ai
     public clientFrameCount = 0; // 客户端现在是第几个帧
 
@@ -82,7 +83,6 @@ export default class MapController extends cc.Component {
         this.createWall(mapWallRightPoints);
         this.createWall(mapWallUpPoints);
         this.makeInitFoods();
-        this.listener();
     }
     public wallWidth = 5;
     private wallContainer: cc.Node | null = null;
@@ -90,46 +90,9 @@ export default class MapController extends cc.Component {
     private snakeContainer: cc.Node | null = null;
     private mapWidth = 0;
     private mapHeight = 0;
-    private listener() {
-        // 当蛇杀死其他蛇时
-        const EventType = gameContext.EventType;
-        this.node.on(EventType.onSnakeKillOtherSnake, this.onSnakeKillOtherSnake, this);
-        // 当蛇撞墙死时
-        this.node.on(EventType.onKillByWall, this.onSnakekillByWall, this);
-        // 当有食物被吃掉时
-        this.node.on(EventType.onFoodEated, this.onFoodEated, this);
-    }
-    
-    // 当有蛇被杀时
-    private onSnakeKillOtherSnake(ev) {
-        // const snakeKill: SnakeController = ev.detail.snakeKill;
-        const snakeKilled: SnakeController = ev.detail.snakeKilled;
-        if (!snakeKilled) {
-            return;
-        }
-        this.createDieFoodBySnakeController(snakeKilled);
-    }
-    // 当有蛇被墙撞死时
-    private onSnakekillByWall(ev) {
-        const snakeController: SnakeController = ev.detail.snakeKilled;
-        if (!snakeController) {
-            return;
-        }
-        this.createDieFoodBySnakeController(snakeController);
-    }
-    // 当食物被吃时(隐藏食物，放进回收池)
-    private onFoodEated(ev: cc.Event.EventCustom) {
-        const foodController = ev.detail.foodController;
-        foodController.onEated();
-        if (foodController.foodType = foodController.Type.normal) {
-            this.normalFoodPool.put(foodController.node);
-        } else {
-            this.dieFoodPool.put(foodController.node);
-        }
-    }
     // 得到死掉的蛇节点信息，然后生成食物
     private createDieFoodBySnakeController(dieSnakeController: SnakeController) {
-        const nodePoints = dieSnakeController.getNodePoints();
+        const nodePoints = dieSnakeController.getDiePoints();
         nodePoints.forEach((point, i) => {
             if (i % this.nodeToDieFoodStep === 0) {
                 const stepX = gameContext.getRandomInt(-this.dieFoodDisRange, this.dieFoodDisRange);
@@ -140,6 +103,7 @@ export default class MapController extends cc.Component {
                 this.createDieFood(newPos);
             }
         });
+        this.snakePool.put(dieSnakeController.node);
     }
     // 创建墙体
     private createWall(points: cc.Vec2[]) {
@@ -174,6 +138,7 @@ export default class MapController extends cc.Component {
         const foodController = foodNode.getComponent('FoodController');
         const color = new cc.Color(gameContext.getRandomInt(0, 255), gameContext.getRandomInt(0, 255), gameContext.getRandomInt(0, 255));
         foodController.init(pos, color);
+        foodController.isEated = false;
         foodNode.parent = this.foodContainer;
     }
     // 生成蛇
@@ -186,21 +151,35 @@ export default class MapController extends cc.Component {
     }
     // 每过一次逻辑帧(拿到地图信息,进行地图食物的生成,把食物生成到一个量级)
     updateMap() {
-        // 根据地图食物的数量来决定加多少个food(暂时可以做成固定一个数量级)
-        const eatedFoodLength = this.normalFoodPool.size();
-        for(let i = 0;i < eatedFoodLength; i++) {
-            this.addRandomPosFood();
-        }
+        // 回收每个死掉的蛇,没死就移动它
+        let roomSnakeCount = 0; // 现在房间的总人数
+        this.snakeContainer.children.forEach(child => {
+            const snakeController = child.getComponent(SnakeController);
+            if (snakeController.isKiided) {
+                this.createDieFoodBySnakeController(snakeController);
+                this.snakePool.put(child);
+            } else {
+                snakeController.move();
+                roomSnakeCount ++;
+            }
+        });
         // 根据蛇的数量来判断是否加入ai(预留几个位置给玩家)
         // 每次更新最多加一个ai，如果玩超过最大减去预留位置，就不再产生ai
-        const roomSnakeCount = this.snakeContainer.childrenCount; // 现在房间的总人数
-        if (roomSnakeCount < this.roomMaxCount && this.clientFrameCount % this.stepMakeAi === 0) {
+        if (this.clientFrameCount % this.stepMakeAi === 0 && roomSnakeCount < this.roomMaxCount) {
             this.createAiSnake();
         }
-        // 让所有蛇动起来
-        this.snakeContainer.children.map(child => {
-            const controller = child.getComponent(SnakeController);
-            controller.move();
+        // 把所有的被吃掉的食物推到池里(把被吃掉的食物换个地方产生)
+        this.foodContainer.children.forEach(child => {
+            const foodController = child.getComponent(FoodController);
+            if (!foodController.isEated) {
+                return;
+            }
+            if (foodController.foodType = foodController.Type.normal) {
+                this.normalFoodPool.put(foodController.node);
+                this.addRandomPosFood();
+            } else {
+                this.dieFoodPool.put(foodController.node);
+            }
         });
         this.clientFrameCount += 1;
     }
@@ -220,16 +199,18 @@ export default class MapController extends cc.Component {
         for(let i = 0; i < initLength; i ++) {
             aiSnakeData.snakeData.push(cc.v2(500 - i * 10, 100));
         }
-        
         this.createSnake(aiSnakeData);
     }
-    private moveListener() {
-        const EventType = gameContext.EventType;
-        this.node.off(EventType.onSnakeKillOtherSnake, this.onSnakeKillOtherSnake, this);
-        this.node.off(EventType.onKillByWall, this.onSnakekillByWall, this);
-        this.node.off(EventType.onFoodEated, this.onFoodEated, this);
-    }
-    onDestroy() {
-        this.moveListener();
+    // 重置
+    public resetMap() {
+        // console.log(1)
+        // this.snakeContainer.children.forEach(child => {
+        //     this.snakePool.put(child);
+        //     child.parent = null;
+        //     child.active = false;
+        // });
+        // this.snakeContainer.removeAllChildren();
+        // this.fo
+        // this.foodContainer.removeAllChildren();
     }
 }

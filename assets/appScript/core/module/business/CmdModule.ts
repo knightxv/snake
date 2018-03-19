@@ -26,11 +26,24 @@ export default class CmdModule {
             });
         }
     }
-    on(eventType, cb) {// 212:30
+    on(eventType, cb, obj) {// 212:30
         if (!this.eventMap[eventType]) {
             this.eventMap[eventType] = [];
         }
-        this.eventMap[eventType].push(cb);
+        this.eventMap[eventType].push(cb.bind(obj));
+    }
+    off(eventType) {
+        if(!this.eventMap[eventType]) {
+            return;
+        }
+        delete this.eventMap [eventType];
+        // if (!cb) {
+        //     return;
+        // }
+        // console.log(this.eventMap[eventType])
+        // this.eventMap[eventType] = this.eventMap[eventType].filter(callback => callback !== cb);
+        // console.log(this.eventMap[eventType])
+
     }
     //  解析命令 1:30!&3:10&4:80,
     public resolveCmds(cmd: string): any[] {
