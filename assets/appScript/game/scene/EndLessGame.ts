@@ -50,6 +50,24 @@ export default class EndLessGame extends BaseGameScene {
         // 单人模式下
         this.moduleManage.CmdModule.sendCmdToClient(this.gameId, this.controllDeg, this.isQuickSpeed);
     }
+    // 复活继续这场游戏
+    reStartGame(roomData) {
+        if (!roomData) {
+            this.LogError('初始化数据不能为空');
+            return;
+        }
+        this.onLoadRoomData(roomData);
+    }
+    // // 暂停游戏
+    // private stopGame() {
+    //     this.stopTickUpdate(); // 停止发送命令。
+    // }
+    // 重新开始新游戏
+    private reStartNewGame(roomData) {
+        this.idControllerMap = {};
+        this.mapController.resetMap();
+        this.onLoadRoomData(roomData);
+    }
     OnSelfSnakeDie() {
         // 单机模式(花不花钱，主要在于新生成的蛇会不会保留数组而已)
         cc.log('self snake die -> 弹出提示操作(花钱立即复活，不花钱重新开始)');

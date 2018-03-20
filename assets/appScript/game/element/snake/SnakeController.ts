@@ -63,6 +63,8 @@ export default class SnakeController extends cc.Component {
         this.eatCount = 0;
         this.node.active = true;
         this.isKiided = false;
+        this.isQuickSpeed = false;
+        // this.curDegress = 0; 
         this.snakeData = data;
         this.create(snakeData);
         if (aiNumber !== null) {
@@ -74,7 +76,7 @@ export default class SnakeController extends cc.Component {
         this.listener();
     }
     // 当死亡时(把每个节点放回实体工厂,然后发布信息信息出去)
-    private onDie() {
+    public onDie() {
         this._diePoints = this.getNodePoints();
         // 回收每个body节点，然后隐藏全部子节点，删除头部(和尾部)
         this.node.children.forEach(snakeNode => {

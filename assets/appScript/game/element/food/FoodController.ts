@@ -21,7 +21,7 @@ export default class FoodController extends cc.Component {
         
     }
     // 当被吃掉的时候(隐藏)
-    onEated() {
+    public onEated() {
         this.isEated = true;
         this.node.active = false;
     }

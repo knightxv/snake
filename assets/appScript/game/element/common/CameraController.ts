@@ -3,14 +3,25 @@ const {ccclass, property} = cc._decorator;
 
 @ccclass
 export default class CameraController extends cc.Component {
-    @property(cc.Node)
-    map = null;
+    camera: cc.Camera;
     onLoad() {
         const camera = this.node.getComponent(cc.Camera);
         cc.director.getPhysicsManager().attachDebugDrawToCamera(camera);
         cc.director.getCollisionManager().attachDebugDrawToCamera(camera);
+        this.camera = camera;
     }
     private target: cc.Node | null = null;
+    // 设置地图(方便把视角限制在map中)
+    private map = null;
+    addTarget(target: cc.Node) {
+        if (!this.camera) {
+            return;
+        }
+        this.camera.addTarget(target);
+    }
+    setMapTarget(map: cc.Node) {
+        this.map = map;
+    }
     // 设置跟随节点
     setFollowTarget(tarNode: cc.Node) {
         this.target = tarNode;

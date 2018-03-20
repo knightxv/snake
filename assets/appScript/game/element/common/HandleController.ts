@@ -1,30 +1,37 @@
 const {ccclass, property} = cc._decorator;
 // 控制手柄
+
+enum eventType {
+    cancelQuickController = 'cancelQuickController',
+    quickController = 'quickController',
+    dirController = 'dirController',
+};
+
 @ccclass
 export default class HandleController extends cc.Component {
-    @property({
-        type: cc.Component.EventHandler,
-        tooltip: '控制方向',
-    })
-    dirController = [];
+    // @property({
+    //     type: cc.Component.EventHandler,
+    //     tooltip: '控制方向',
+    // })
+    // dirController = [];
 
-    @property({
-        type: cc.Component.EventHandler,
-        tooltip: '控制加速',
-    })
-    quickController = [];
+    // @property({
+    //     type: cc.Component.EventHandler,
+    //     tooltip: '控制加速',
+    // })
+    // quickController = [];
 
-    @property({
-        type: cc.Component.EventHandler,
-        tooltip: '取消加速',
-    })
-    cancelQuickController = [];
-
+    // @property({
+    //     type: cc.Component.EventHandler,
+    //     tooltip: '取消加速',
+    // })
+    // cancelQuickController = [];
     private innnercircle: cc.Node | null = null;
     private outSideCircle: cc.Node | null = null;
     private quickBtn: cc.Node | null = null;
     private innerCircleR: number = 0; // 内圆半径
     private outCircleR: number = 0; // 外圆半径
+    public EventType = eventType;
     onLoad() {
         this.innnercircle = cc.find('outsideCircle/innerCircle', this.node);
         const innerCircleR = this.innnercircle.getComponent('Circle').circlrRad;
@@ -73,17 +80,23 @@ export default class HandleController extends cc.Component {
         }
         this.innnercircle.setPosition(innerLocalPos);
         const dirRad = innerLocalPos.signAngle(cc.v2(1, 0));
-        cc.Component.EventHandler.emitEvents(this.dirController, dirRad);
+        this.node.emit(this.EventType.dirController, {
+            dirRad,
+        });
+        // cc.Component.EventHandler.emitEvents(this.dirController, dirRad);
+        ev.stopPropagation();
     }
     // 加速
     quick(ev: cc.Event.EventTouch) {
+        // cc.Component.EventHandler.emitEvents(this.quickController);
+        this.node.emit(this.EventType.quickController);
         ev.stopPropagation();
-        cc.Component.EventHandler.emitEvents(this.quickController);
     }
     // 取消加速
     cancelQuick(ev: cc.Event.EventTouch) {
+        // cc.Component.EventHandler.emitEvents(this.cancelQuickController);
+        this.node.emit(this.EventType.cancelQuickController);
         ev.stopPropagation();
-        cc.Component.EventHandler.emitEvents(this.cancelQuickController);
     }
     // 失去控制
     onLoseController(ev: cc.Event.EventTouch) {

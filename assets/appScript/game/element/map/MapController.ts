@@ -204,16 +204,16 @@ export default class MapController extends cc.Component {
         }
         this.createSnake(aiSnakeData);
     }
-    // 重置
+    // 重置map
     public resetMap() {
-        // console.log(1)
         // this.snakeContainer.children.forEach(child => {
-        //     this.snakePool.put(child);
-        //     child.parent = null;
-        //     child.active = false;
+        //     const snakeController = child.getComponent(SnakeController);
+        //     snakeController.onDie();
         // });
-        // this.snakeContainer.removeAllChildren();
-        // this.fo
-        // this.foodContainer.removeAllChildren();
+        this.snakeContainer.removeAllChildren()
+        this.foodContainer.children.forEach(child => {
+            const foodController = child.getComponent(FoodController);
+            foodController.onEated();
+        });
     }
 }

@@ -6,38 +6,78 @@ const {ccclass, property} = cc._decorator;
 
 @ccclass
 export default class BaseGameScene extends BaseScene {
+    @property({
+        type: cc.Prefab,
+        tooltip: '手柄',
+    })
+    handlePrefab = null;
+    
+    @property({
+        type: cc.Prefab,
+        tooltip: '地图',
+    })
+    mapPrefab = null;
+
+    @property({
+        type: cc.Prefab,
+        tooltip: 'camera摄影师',
+    })
+    cameraPrefab = null;
+
     protected gameContext = gameContext;
     protected gameId; // 玩家的gameId
-    protected snakeContainer: cc.Node = null;
     protected idControllerMap = {}; // gameId与SnakeController的对照表
     protected cameraController = null; // 地图控制器
     protected mapController: MapController = null; // 地图控制器
+    protected handController = null; // 手柄控制器
     protected controllDeg = 0; // 本蛇的控制角度
     protected isQuickSpeed = false; // 本蛇的是否加速
     protected needModules(ModuleDef?: any) {
         const { NetModule, CmdModule } = ModuleDef;
         return [NetModule, CmdModule];
     }
+    OnLoad() {
+        if (!this.handlePrefab || !this.cameraPrefab || !this.mapPrefab) {
+            this.LogError('handle or camera or map prefab not exit');
+            return;
+        }
+        const map = cc.instantiate(this.mapPrefab);
+        this.mapController = map.getComponent('MapController');
+        this.node.addChild(map);
+
+        const canvasParent = this.node.parent;
+        const camera = cc.instantiate(this.cameraPrefab);
+        this.cameraController = camera.getComponent('CameraController');
+        this.cameraController.setMapTarget(map);
+        canvasParent.addChild(camera);
+
+        const handle = cc.instantiate(this.handlePrefab);
+        this.handController = handle.getComponent('HandleController');
+        canvasParent.addChild(handle);
+    }
     start() {
         // 每过30ms从游戏管理器拿到命令进行渲染。有可能一次性拿到很多，进行循环处理
-        const camera = cc.find('camera');
-        this.cameraController = camera.getComponent('CameraController');
         if (!this.cameraController) {
             this.LogError('camera控制器不存在');
             return;
         }
-        const map = cc.find('map', this.node);
-        this.mapController = map.getComponent('MapController');
         if (!this.mapController) {
             this.LogError('map控制器不存在');
             return;
         }
+        if (!this.handController) {
+            this.LogError('手柄控制器不存在');
+            return;
+        }
+        this.cameraController.addTarget(this.node);
         this.listener();
         this.OnStart();
     }
     OnStart() {
         this.Log('rewrite OnStart to init game');
     }
+    OnSelfSnakeDie() {}
+    TickUpdate() {}
     // 当数据加载完成时(通过初始化的房间数据来初始化游戏)
     protected onLoadRoomData(roomData) {
         this.gameId = roomData.gameId;
@@ -46,40 +86,18 @@ export default class BaseGameScene extends BaseScene {
         this.createSnakesByPlaysData(roomData.playsData);
         this.startGame();
     }
-    
     // 开始游戏(当初始化数据都加载好的时候)
     protected startGame() {
         this.setMapAutoFollow();
         this.setTick();
     }
-    // 重新开始游戏
-    protected reStartGame(roomData) {
-        if (!roomData) {
-            this.LogError('初始化数据不能为空');
-            return;
-        }
-        this.onLoadRoomData(roomData);
-    }
-    // 暂停游戏(单机模式)
-    protected stopGame() {
-        this.stopTickUpdate(); // 停止发送命令。
-    }
-    // 开始新游戏(单机模式)
-    protected reStartNewGame(roomData) {
-        // this.removeListener();
-        // this.mapController.resetMap();
-        // this.onLoadRoomData(roomData);
-    }
     // 当自己的蛇死掉的时候
-    onSelfSnakeDie() {
+    private onSelfSnakeDie() {
         this.cancelMapAutoFollow(); // (释放内存)
         this.onCancelQuick(); // 取消加速
         this.OnSelfSnakeDie();
     }
-    OnSelfSnakeDie() {
-        // 联机模式
-        // cc.log('self snake die -> 弹出提示操作(立即复活)');
-    }
+    
     // 取消地图跟随
     protected cancelMapAutoFollow() {
         this.cameraController.setFollowTarget(null);
@@ -108,16 +126,15 @@ export default class BaseGameScene extends BaseScene {
     }
     tickUpdate() {
         this.TickUpdate();
-        // 多人模式下
-        // this.moduleManage.CmdModule.sendCmdToServer(this.controllDeg, this.isQuickSpeed);
     }
-    TickUpdate() {}
+    
     // 停止发送玩家命令(对于单机，停止游戏，对于联机中止玩家输出，其他玩家的操作还在继续)
     protected stopTickUpdate() {
         this.unschedule(this.tickUpdate);
     }
     // 监听事件
     listener() {
+        this.removeListener();
         const CmdModule = this.moduleManage.CmdModule;
         CmdModule.on(CmdModule.EventType.receiveCmd, this.tickLogic, this);
         // 当蛇杀死其他蛇时
@@ -125,6 +142,10 @@ export default class BaseGameScene extends BaseScene {
         this.node.on(EventType.onSnakeKillOtherSnake, this.onSnakeKillOtherSnake, this);
         // 当蛇撞墙死时
         this.node.on(EventType.onKillByWall, this.onSnakekillByWall, this);
+        // 手柄控制
+        this.handController.node.on(this.handController.EventType.quickController, this.onQuickController, this);
+        this.handController.node.on(this.handController.EventType.cancelQuickController, this.onCancelQuick, this);
+        this.handController.node.on(this.handController.EventType.dirController, this.onDirController, this);
     }
     // 取消监听
     removeListener() {
@@ -133,6 +154,9 @@ export default class BaseGameScene extends BaseScene {
         const EventType = this.gameContext.EventType;
         this.node.off(EventType.onSnakeKillOtherSnake, this.onSnakeKillOtherSnake);
         this.node.off(EventType.onKillByWall, this.onSnakekillByWall);
+        this.handController.node.off(this.handController.EventType.quickController, this.onQuickController);
+        this.handController.node.off(this.handController.EventType.cancelQuickController, this.onCancelQuick);
+        this.handController.node.off(this.handController.EventType.dirController, this.onDirController);
     }
     // 当有蛇被杀时
     onSnakeKillOtherSnake(ev) {
@@ -176,7 +200,8 @@ export default class BaseGameScene extends BaseScene {
         });
     }
     // 当用户进行控制时(夹角弧度)
-    onDirController(dirRad) {
+    onDirController(ev) {
+        const { dirRad } = ev.detail;
         this.controllDeg = this.gameContext.getDegByRad(dirRad);
     }
     // 当用户进行加速时

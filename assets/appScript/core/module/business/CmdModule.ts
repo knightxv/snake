@@ -43,7 +43,10 @@ export default class CmdModule {
         // console.log(this.eventMap[eventType])
         // this.eventMap[eventType] = this.eventMap[eventType].filter(callback => callback !== cb);
         // console.log(this.eventMap[eventType])
-
+    }
+    // 归纳命令
+    InduceCmd(deg, isQuick): string {
+        return `${deg}${isQuick ? '!': ''}`;
     }
     //  解析命令 1:30!&3:10&4:80,
     public resolveCmds(cmd: string): any[] {
