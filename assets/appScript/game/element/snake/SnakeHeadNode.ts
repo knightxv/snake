@@ -6,45 +6,70 @@ const partType = gameContext.SnakePart;
 export default class SnakeHeadNode extends SnakeNode {
     // 设置目标坐标（缓慢移动过去）
     public partType = partType.head;
-    Onload() {
-        console.log(13333)
+    public aroundWall: cc.Collider[] = []; // 周边的墙
+    public aroundFood = []; // 周边的食物
+    public aroundSnakeNode = []; // 周边的蛇节点
+    OnLoad() {
+        this.circleCollider.radius = gameContext.snakeNodeSkinRadius * 5;
     }
     onCollisionEnter(other: cc.CircleCollider, self) {
-        if (!other.node.parent || !self.node.parent) {
+        if (other.node.parent === self.node.parent) {
             return;
         }
         const otherGroup = other.node.group;
         if (otherGroup === 'wall') {
-            self.node.parent.emit('collisionWall');
+            this.aroundWall.push(other);
+            // self.node.parent.emit('collisionWall');
             return;
         }
         if (otherGroup === 'food') {
             const foodController = other.node.getComponent('FoodController');
-            self.node.parent.emit('collisionFood', {
-                controller: foodController,
+            this.aroundFood.push(foodController);
+            // self.node.parent.emit('collisionFood', {
+            //     controller: foodController,
+            // });
+            return;
+        }
+        if (otherGroup === 'snakeNode') {
+            const otherController = other.node.getComponent('SnakeNode');
+            this.aroundSnakeNode.push(otherController);
+            return;
+        }
+    }
+    onCollisionExit(other) {
+        const otherGroup = other.node.group;
+        if (otherGroup === 'wall') {
+            this.aroundWall = this.aroundWall.filter(wall => {
+                return other !== wall;
+            });
+            return;
+        }
+        if (otherGroup === 'food') {
+            const foodController = other.node.getComponent('FoodController');
+            this.aroundFood = this.aroundWall.filter(food => {
+                return foodController !== food;
             });
             return;
         }
         if (otherGroup === 'snakeNode') {
-            const otherController = other.node.parent.getComponent('SnakeController');
-            const otherSnakeGameId = otherController.gameId;
-            if (otherController.isSaveState) {
-                return;
-            }
-            const selfSnakeGameId = self.node.parent.getComponent('SnakeController').gameId;
-            otherSnakeGameId !== selfSnakeGameId && self.node.parent.emit('collisionSnake', {
-                controller: otherController,
+            const otherController = other.node.getComponent('SnakeNode');
+            this.aroundSnakeNode = this.aroundSnakeNode.filter(controller => {
+                return otherController !== controller;
             });
             return;
         }
     }
     // 添加功能探测器
     addDetector(detector: cc.Prefab) {
-        if (!detector) {
-            return;
-        }
-        const detectorNode = cc.instantiate(detector);
-        this.node.addChild(detectorNode);
+        // if (!detector) {
+        //     return;
+        // }
+        // const detectorNode = cc.instantiate(detector);
+        // this.node.addChild(detectorNode);
     }
-    
+    OnDisable() {
+        this.aroundWall = [];
+        this.aroundFood = [];
+        this.aroundSnakeNode = [];
+    }
 }

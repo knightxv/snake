@@ -290,7 +290,7 @@ var isArray = Array.isArray;
   }
 
 
-  pomelo
+  // pomelo
   if (typeof Object.create !== 'function') {
     Object.create = function (o) {
       function F() { }
@@ -394,7 +394,7 @@ var isArray = Array.isArray;
 
       delete callbacks[msg.id];
       if (typeof cb !== 'function') {
-        console.log('[pomeloclient.processMessage] cb is not a function for request ' + msg.id);
+        // console.log('[pomeloclient.processMessage] cb is not a function for request ' + msg.id);
         return;
       }
 

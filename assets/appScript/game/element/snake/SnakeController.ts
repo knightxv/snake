@@ -1,6 +1,7 @@
 import gameContext from '../../gameContext';
 import SnakeNodeController from './SnakeNode';
 import SnakeHeadNodeController from './SnakeHeadNode';
+import SnakeNode from './SnakeNode';
 
 const {ccclass, property} = cc._decorator;
 const snakeNodeType = gameContext.SnakePart;
@@ -15,11 +16,11 @@ export default class SnakeController extends cc.Component {
     @property(cc.Prefab)
     snakeBodyPrefab = null;
 
-    @property({
-        type: cc.Prefab,
-        tooltip: 'ai碰撞探测器',
-    })
-    aiDetector = null;
+    // @property({
+    //     type: cc.Prefab,
+    //     tooltip: 'ai碰撞探测器',
+    // })
+    // aiDetector = null;
 
     private curDegress = 0; // 目前的角度
     public headerControll: SnakeHeadNodeController | null = null;
@@ -28,10 +29,10 @@ export default class SnakeController extends cc.Component {
     public controllDeg = 0; // 进度方向(deg)
     public score = 0; // 本条蛇的分数
     public isSaveState = true; // 是否是受保护状态
-    public initSaveTime = 1; // 初始化的保护时间
     public snakeData: any = {};
-    public isKiided = false; // 是否死掉了
+    public isKilled = false; // 是否死掉了
     public skinStep = 2; // 多少个节点生成一个皮肤节点
+    public isAi = false; // 是否是ai
     
     private bodyNodePool = new cc.NodePool(); // 身体节点池
     private putInBodyPool(bodyNode: cc.Node) {
@@ -49,31 +50,35 @@ export default class SnakeController extends cc.Component {
         if (!headerControll) {
             return;
         }
-        const headPos = headerControll.getPos();
+        const headPos = headerControll.getCurrentPos();
         const disPos = gameContext.getDisPosByDeg(nextHeadDegress, isQuick);
         const targetPoint = headPos.add(disPos);
-        // const targetPointInt = cc.v2(Math.floor(targetPoint.x), Math.floor(targetPoint.y));
         headerControll.moveNext(targetPoint);
     }
     init(data) {
-        const { gameId, userId, name, snakeData, teamId, score, aiNumber } = data;
+        const { gameId, userId, name, snakeData, teamId, score, aiNumber, deg } = data;
         this.gameId = gameId;
-        this.score = score;
+        this.score = score || 0;
         this.isSaveState = true;
         this.eatCount = 0;
         this.node.active = true;
-        this.isKiided = false;
+        this.isKilled = false;
         this.isQuickSpeed = false;
-        // this.curDegress = 0; 
+        this.isAvoidCd = false;
+        this.isAi = !!aiNumber;
         this.snakeData = data;
         this.create(snakeData);
-        if (aiNumber !== null) {
-            this.headerControll.addDetector(this.aiDetector);
+        this.controllDeg = 0;
+        if (deg) {
+            this.controllDeg = deg;
         }
-        this.scheduleOnce(() => {
+        // if (this.isAi) {
+        //     this.headerControll.addDetector(this.aiDetector);
+        // }
+        // 保护30个逻辑帧，差不多900ms约等于1s
+        gameContext.scheduleOnce(() => {
             this.isSaveState = false;
-        }, this.initSaveTime);
-        this.listener();
+        }, 30);
     }
     // 当死亡时(把每个节点放回实体工厂,然后发布信息信息出去)
     public onDie() {
@@ -89,7 +94,7 @@ export default class SnakeController extends cc.Component {
             }
         });
         this.node.removeAllChildren();
-        this.isKiided = true;
+        this.isKilled = true;
         this.node.active = false;
         this.removeListener();
         this.preAddedControll = null;
@@ -98,51 +103,52 @@ export default class SnakeController extends cc.Component {
     }
     // 监听
     listener() {
-        this.node.on('collisionWall', this.onCollsionWall, this);
-        this.node.on('collisionFood', this.onEatFood, this);
-        this.node.on('collisionSnake', this.onCollisionOtherSnake, this);
-        this.node.on('wallWarn', this.WallWarn, this);
-        this.node.on('emenyWarn', this.emenyWarn, this);
+        // this.node.on('collisionWall', this.onCollsionWall, this);
+        // this.node.on('collisionFood', this.onEatFood, this);
+        // this.node.on('collisionSnake', this.onCollisionOtherSnake, this);
+        // this.node.on('wallWarn', this.WallWarn, this);
+        // this.node.on('emenyWarn', this.emenyWarn, this);
         // this.node.on('foodPrice', this.collisionPrice, this);
     }
-    // 避免危险（改变方向）
+    
+    private seedCount = 0;
+    random(min, max) {
+        this.seedCount += 1;
+        return gameContext.getRandomIntBySeed(min, max, `${gameContext.randomSeed}snake${this.gameId}${this.seedCount}`);
+    }
+    // 避免危险
+    private isAvoidCd = false;
     avoidDanger() {
-        this.controllDeg += gameContext.getRandomInt(90, 180);
-    }
-    WallWarn() {
-        this.avoidDanger();
-    }
-    emenyWarn(ev) {
-        const otherSnakeController: SnakeController = ev.detail.controller;
-        if (!otherSnakeController) {
+        if (this.isAvoidCd) {
             return;
         }
-        if (otherSnakeController.gameId !== this.gameId) {
-            this.avoidDanger();
-        }
+        this.isAvoidCd = true;
+        gameContext.scheduleOnce(() => {
+            this.isAvoidCd = false;
+        }, 3);
+        const controllDeg = (+this.controllDeg + this.random(90, 180)) % 360;
+        this.controllDeg = controllDeg;
     }
     // collisionPrice() {}
     removeListener() {
-        this.node.off('collisionWall', this.onCollsionWall);
-        this.node.off('collisionFood', this.onEatFood);
-        this.node.off('collisionSnake', this.onCollisionOtherSnake);
-        this.node.off('wallWarn', this.WallWarn);
-        this.node.off('emenyWarn', this.emenyWarn);
+        // this.node.off('collisionWall', this.onCollsionWall);
+        // this.node.off('collisionFood', this.onEatFood);
+        // this.node.off('collisionSnake', this.onCollisionOtherSnake);
+        // this.node.off('wallWarn', this.WallWarn);
+        // this.node.off('emenyWarn', this.emenyWarn);
     }
     // 撞墙了
-    onCollsionWall(ev) {
+    onCollsionWall() {
         const killByWallEvent = new cc.Event.EventCustom(gameContext.EventType.onKillByWall, true);
         killByWallEvent.setUserData({
             snakeKilled: this,
         });
         this.node.dispatchEvent(killByWallEvent);
         this.onDie();
-        ev.stopPropagation();
     }
     private eatCount = 0; // 剩余还没消化的食物（当还未消化的食物大于1）
     // 当吃食物时
-    onEatFood(ev: cc.Event.EventCustom) {
-        const foodController = ev.detail.controller;
+    onEatFood(foodController) {
         foodController.onEated();
         const countToNode = foodController.countToNode;
         const foodScore = foodController.foodScore;
@@ -153,7 +159,6 @@ export default class SnakeController extends cc.Component {
         }
         this.foodToNode();
         this.eatCount -= 1;
-        ev.stopPropagation();
     }
     // 把食物转换为节点
     foodToNode() {
@@ -162,8 +167,7 @@ export default class SnakeController extends cc.Component {
         this.createNode(snakeNodeType.body, pos);
     }
     // 当碰撞到其他蛇的时候
-    onCollisionOtherSnake(ev) {
-        const otherSnakeController = ev.detail.controller;
+    onCollisionOtherSnake(otherSnakeController) {
         const killEvent = new cc.Event.EventCustom(gameContext.EventType.onSnakeKillOtherSnake, true);
         killEvent.setUserData({
             snakeKill: otherSnakeController,
@@ -171,7 +175,6 @@ export default class SnakeController extends cc.Component {
         });
         this.node.dispatchEvent(killEvent);
         this.onDie();
-        ev.stopPropagation();
     }
     // 添加节点
     private preAddedControll: SnakeNodeController | null = null;
@@ -216,7 +219,8 @@ export default class SnakeController extends cc.Component {
     // 得到所有节点世界坐标的信息
     public getNodePoints(): cc.Vec2[] {
         return this.node.children.map(childNode => {
-            return this.node.convertToWorldSpaceAR(childNode.position);
+            const nodeController = childNode.getComponent(SnakeNode);
+            return this.node.convertToWorldSpaceAR(nodeController.getCurrentPos());
         })
     }
     // 得到死的时候节点们世界point

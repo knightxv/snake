@@ -8,41 +8,51 @@ export default class SnakeNode extends cc.Component {
     private targetPoint: cc.Vec2 | null = null;
     private nextControll: SnakeNode | null = null;
     private bgNode: cc.Node;
+    protected circleCollider;
     onLoad() {
-        const circleCollider = this.node.addComponent(cc.CircleCollider);
-        circleCollider.radius = 16;
+        this.circleCollider = this.node.addComponent(cc.CircleCollider);
+        this.circleCollider.radius = gameContext.snakeNodeSkinRadius;
         this.OnLoad();
     }
     OnLoad() {}
-    public moveNext(tarPos: cc.Vec2) {
-        // 移动到指定目标
-        this.node.stopAllActions();
-        this.node.runAction(cc.moveTo(gameContext.tickTime / 1000, tarPos));
+    private curPos; // 当前的位置
+    // tarViewPos:视图的位置 tarDataPos:计算的位置
+    public moveNext(tarViewPos: cc.Vec2, tarDataPos?: cc.Vec2) {
+        const dataTarPos = tarDataPos || tarViewPos;
         // 图的旋转
-        const curPos: cc.Vec2 = cc.v2(this.getPos());
-        const disV2 = tarPos.sub(curPos);
-        const rad = disV2.signAngle(cc.v2(1, 0));
+        const curPos: cc.Vec2 = this.node.position;
+        const ViewdisV2 = tarViewPos.sub(curPos);
+        const dataDisV2 = dataTarPos.sub(this.getCurrentPos());
+        const rad = ViewdisV2.signAngle(cc.v2(1, 0));
         const deg = gameContext.getDegByRad(rad) - 90;
         this.node.rotation = -deg;
         // 设置下一节点的目标位置(离目标差一个身位)
         if (this.nextControll) {
-            let nextTarPos = tarPos;
-            if (disV2.mag() !== 0) {
-                const disTarPos = disV2.normalize().mul(gameContext.snakeNodeRadius * 2);
-                nextTarPos = tarPos.sub(disTarPos);
+            let nextTarViewPos = tarViewPos;
+            let disTarDataPos = dataTarPos;
+            if (ViewdisV2.mag() !== 0) {
+                nextTarViewPos = tarViewPos.sub(ViewdisV2.normalize().mul(gameContext.snakeNodeRadius * 2));
             }
-            this.nextControll.moveNext(nextTarPos);
+            if (dataDisV2.mag() !== 0) {
+                disTarDataPos = dataTarPos.sub(dataDisV2.normalize().mul(gameContext.snakeNodeRadius * 2));
+            }
+            this.nextControll.moveNext(nextTarViewPos, disTarDataPos);
         }
+        // 移动到指定目标
+        this.node.stopAllActions();
+        this.node.runAction(cc.moveTo(gameContext.tickTime / 1000, tarViewPos)); 
+        this.curPos = dataTarPos;
+    }
+    // 得到当前帧的位置
+    public getCurrentPos(): cc.Vec2 {
+        return this.curPos || this.node.position;
     }
     public setNextController(nextController) {
         this.nextControll = nextController;
     }
-    public setPos(tarPos) {
-        this.node.position = tarPos;
-    }
-    public getPos(): cc.Vec2 {
-        return this.node.position;
-    }
+    // public setPos(tarPos) {
+    //     this.node.position = tarPos;
+    // }
     // 加载皮肤
     public loadSkin() {
 
@@ -78,10 +88,13 @@ export default class SnakeNode extends cc.Component {
     }
     onDisable() {
         this.nextControll = null;
+        this.curPos = null;
+        this.OnDisable();
         if (this.bgNode) {
             this.bgNode.active = false;
         }
     }
+    OnDisable() {}
     // update() {
     //     // if (this.targetPoint) {
 

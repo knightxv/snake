@@ -1,8 +1,6 @@
+import EventEmitter from './EventEmitter';
 
-const {ccclass, property, executionOrder} = cc._decorator;
-
-@ccclass
-class BaseClass extends cc.Component {
+class BaseClass extends EventEmitter {
     private mName: string = '';// 模块名字
     protected isImportInNeed = true; // 是否按需加载模块
 

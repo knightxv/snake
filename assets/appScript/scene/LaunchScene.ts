@@ -3,7 +3,6 @@ const {ccclass, property} = cc._decorator;
 
 @ccclass
 export default class LaunchScene extends BaseScene {
-    
     private updateProgressController = null;
     OnLoad() {
         const updateProgress = this.node.getChildByName('progress');

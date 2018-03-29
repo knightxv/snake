@@ -17,7 +17,7 @@
         "__id__": 2
       },
       {
-        "__id__": 12
+        "__id__": 11
       }
     ],
     "_tag": -1,
@@ -73,9 +73,6 @@
       },
       {
         "__id__": 10
-      },
-      {
-        "__id__": 11
       }
     ],
     "_prefab": null,
@@ -404,32 +401,6 @@
     "_enabled": true
   },
   {
-    "__type__": "cc.Widget",
-    "_name": "",
-    "_objFlags": 0,
-    "node": {
-      "__id__": 2
-    },
-    "_enabled": true,
-    "isAlignOnce": true,
-    "_target": null,
-    "_alignFlags": 45,
-    "_left": 0,
-    "_right": 0,
-    "_top": 0,
-    "_bottom": 0,
-    "_verticalCenter": 0,
-    "_horizontalCenter": 0,
-    "_isAbsLeft": true,
-    "_isAbsRight": true,
-    "_isAbsTop": true,
-    "_isAbsBottom": true,
-    "_isAbsHorizontalCenter": true,
-    "_isAbsVerticalCenter": true,
-    "_originalWidth": 960,
-    "_originalHeight": 640
-  },
-  {
     "__type__": "cc.Node",
     "_name": "New Label",
     "_objFlags": 0,
@@ -441,10 +412,10 @@
     "_active": true,
     "_components": [
       {
-        "__id__": 13
+        "__id__": 12
       },
       {
-        "__id__": 14
+        "__id__": 13
       }
     ],
     "_prefab": null,
@@ -489,7 +460,7 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 12
+      "__id__": 11
     },
     "_enabled": true,
     "_useOriginalSize": false,
@@ -511,7 +482,7 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 12
+      "__id__": 11
     },
     "_enabled": true,
     "isAlignOnce": true,

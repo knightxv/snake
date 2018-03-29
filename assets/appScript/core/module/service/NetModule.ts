@@ -1,57 +1,94 @@
+import BaseNetModule from '../../../../baseScript/module/service/BaseNetModule';
 import pomelo from '../../../core/lib/pomelo';
-/*
-pomelo.init({
-    host : host1,
-    port : port1
-}, function () {
-    var route = 'gate.gateHandler.queryEntry';
-    pomelo.request(route, {
-    }, function () {
-        pomelo.disconnect(function () {
-            pomelo.init({
-                host : host2,
-                port : port2,
-                reconnect : true
-            }, function () {
-            })
-        });
-    })
-    
-});
 
-*/
 
-export default class NetModule {
+enum eventType {
+    onReceiveCmd = 'onReceiveCmd',
+    onGameStart = 'onGameStart',
+};
+
+export default class NetModule extends BaseNetModule {
     pomelo: any;
+    isConnect: boolean = false;
+    Event = eventType;
     constructor() {
+        super();
         this.pomelo = pomelo;
-        if (this.pomelo) {
-            this.init();
-        }
+        this.connect();
     }
-    init() {
+    connect(cb?) {
+        if (!this.pomelo) {
+            cb('pomelo不存在')
+            return;
+        }
         const pomelo = this.pomelo;
-        const uid = 'knight';
-        const host = '127.0.0.1'; // window.location.hostname
+        const host = window.location.hostname;
         const port = "3010";
         pomelo.init({
             host: host,
             port: port,
             log: true
-          }, function() {
-            pomelo.request("snake.roomHandle.entry", {}, function(data) {
-                cc.log(data);
-            });
+          }, (socket) => {
+            this.listener();
+            this.isConnect = true;
+            cb && cb(null);
           });
     }
+    // 监听事件
+    listener() {
+        pomelo.on('onGameStart', (msg) => {
+            console.log('onGameStart', msg)
+            this.emit(eventType.onGameStart, msg);
+        })
+        // pomelo.on('onInterRoom', (msg) => {
+        //     console.log(msg);
+        // })
+        pomelo.on('onReceiveCmd', (msg) => {
+            this.emit(eventType.onReceiveCmd, msg);
+        })
+    }
     sendCmd(cmd) {
-        // console.log(`发送命令给服务器:${cmd}`);
-        // console.log(pomelo)
+        const sendRoute = 'snake.gameHandler.gameOption';
+        this.pomelo.notify(sendRoute, {
+            cmd
+        });
     }
-    on(eventType: string, cb: Function) {
+
+    matchRoom(cb?: Function) {
+        this.request("snake.roomHandler.matchSingerRoom", {}, function(errMsg, roomData) {
+            if (errMsg) {
+                cb(errMsg);
+                return;
+            }
+            cb && cb(null, roomData);
+        });
+    }
+    // 登陆
+    login(param: any, cb?: Function) {
+        const { uid, username } = param;
+        this.request("connector.entryHandler.entry", {
+            uid, username
+        }, function(errMsg, userData) {
+            if (errMsg) {
+                cb(errMsg);
+                return;
+            }
+            cb(null, userData);
+        });
 
     }
-    off(eventType: string) {
-
+    request(route, params, cb) {
+        this.pomelo.request(route, params, function(res) {
+            console.group(`socket request: ${route}`);
+            console.log('params:', params);
+            console.log('response:', res);
+            console.groupEnd();
+            const { code, msg, data } = res;
+            if (code != 200) {
+                cb(msg);
+                return;
+            }
+            cb(null, data)
+        });
     }
 }

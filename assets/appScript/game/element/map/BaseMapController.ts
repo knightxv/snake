@@ -4,7 +4,7 @@ import FoodController from '../food/FoodController';
 const {ccclass, property} = cc._decorator;
 
 @ccclass
-export default class MapController extends cc.Component {
+export default class BaseMapController extends cc.Component {
     @property({
         type: cc.Prefab,
         tooltip: '普通食物的prefab',
@@ -23,16 +23,16 @@ export default class MapController extends cc.Component {
     })
     snakePrefab = null;
 
-    private normalFoodPool = new cc.NodePool();
-    private dieFoodPool = new cc.NodePool();
-    private snakePool = new cc.NodePool();
+    protected normalFoodPool = new cc.NodePool();
+    protected dieFoodPool = new cc.NodePool();
+    protected snakePool = new cc.NodePool();
 
     public mapFoodCount = 50; // 每个地图的食物个数
     public nodeToDieFoodStep = 5; // 蛇死后每多少个节点生成一次死后食物
     public dieFoodDisRange = 10; // 蛇死后生成的节点偏移的距离范围
     public roomMaxCount = 10; // 每个地图的最大蛇数量（单机模式10人）
     public stepMakeAi = 100; // 每隔多少个30ms产生一次ai
-    public clientFrameCount = 0; // 客户端现在是第几个帧
+    public wallWidth = 5;
 
     onLoad() {
         var manager = cc.director.getCollisionManager();
@@ -82,31 +82,38 @@ export default class MapController extends cc.Component {
         this.createWall(mapWallDownPoints);
         this.createWall(mapWallRightPoints);
         this.createWall(mapWallUpPoints);
-        this.makeInitFoods();
     }
-    public wallWidth = 5;
-    private wallContainer: cc.Node | null = null;
-    private foodContainer: cc.Node | null = null;
-    private snakeContainer: cc.Node | null = null;
-    private mapWidth = 0;
-    private mapHeight = 0;
+    protected wallContainer: cc.Node | null = null;
+    protected foodContainer: cc.Node | null = null;
+    protected snakeContainer: cc.Node | null = null;
+    protected mapWidth = 0;
+    protected mapHeight = 0;
     // 得到死掉的蛇节点信息，然后生成食物
-    private createDieFoodBySnakeController(dieSnakeController: SnakeController) {
+    protected createDieFoodBySnakeController(dieSnakeController: SnakeController) {
         const nodePoints = dieSnakeController.getDiePoints();
         nodePoints.forEach((point, i) => {
             if (i % this.nodeToDieFoodStep === 0) {
-                const stepX = gameContext.getRandomInt(-this.dieFoodDisRange, this.dieFoodDisRange);
-                const stepY = gameContext.getRandomInt(-this.dieFoodDisRange, this.dieFoodDisRange);
-                const newX = Math.floor(point.x)  + stepX;
-                const newY = Math.floor(point.y) + stepY;
+                // const stepX = gameContext.getRandomInt(-this.dieFoodDisRange, this.dieFoodDisRange);
+                // const stepY = gameContext.getRandomInt(-this.dieFoodDisRange, this.dieFoodDisRange);
+                // const newX = Math.floor(point.x)  + stepX; // 暂时性取0
+                // const newY = Math.floor(point.y) + stepY; // 暂时性取0
+                const newX = Math.floor(point.x)  + 0; // 暂时性取0
+                const newY = Math.floor(point.y) + 0; // 暂时性取0
                 const newPos = cc.v2(newX, newY);
                 this.createDieFood(newPos);
             }
         });
         this.snakePool.put(dieSnakeController.node);
     }
+     // 创建初始化死后食物
+     protected createDieFood(pos: cc.Vec2) {
+        const foodNode: cc.Node = this.dieFoodPool.get() || cc.instantiate(this.dieFoodPrefab);
+        foodNode.group = 'food';
+        foodNode.setPosition(pos);
+        foodNode.parent = this.foodContainer;
+    }
     // 创建墙体
-    private createWall(points: cc.Vec2[]) {
+    protected createWall(points: cc.Vec2[]) {
         const wallNode = new cc.Node('wall');
         wallNode.group = 'wall';
         const polygonCollider = wallNode.addComponent(cc.PolygonCollider);
@@ -114,31 +121,29 @@ export default class MapController extends cc.Component {
         this.wallContainer.addChild(wallNode);
     }
     // 创建初始化食物
-    private makeInitFoods() {
+    protected makeInitFoods() {
         for(let i = 0; i < this.mapFoodCount; i++) {
-            this.addRandomPosFood();
+            this.createNormalFood(i);
         }
     }
     // 添加一个地图任意位置的食物
-    private addRandomPosFood() {
+    protected addRandomPosFood() {
         const { mapWidth, mapHeight } = this;
-        const foodPos = cc.v2(gameContext.getRandomInt(0, mapWidth), gameContext.getRandomInt(0, mapHeight))
-        this.createNormalFood(foodPos);
-    }
-    // 创建初始化死后食物
-    private createDieFood(pos: cc.Vec2) {
-        const foodNode: cc.Node = this.dieFoodPool.get() || cc.instantiate(this.dieFoodPrefab);
-        foodNode.group = 'food';
-        foodNode.setPosition(pos);
+        const foodNode: cc.Node =  this.normalFoodPool.get();
+        if (!foodNode) {
+            return;
+        }
+        const foodController = foodNode.getComponent('FoodController');
+        foodController.init(mapWidth, mapHeight);
         foodNode.parent = this.foodContainer;
     }
     // 创建普通食物
-    private createNormalFood(pos: cc.Vec2) {
-        const foodNode: cc.Node = this.normalFoodPool.get() || cc.instantiate(this.foodPrefab);
+    protected createNormalFood(foodIndex) {
+        const { mapWidth, mapHeight } = this;
+        const foodNode: cc.Node = cc.instantiate(this.foodPrefab);
         const foodController = foodNode.getComponent('FoodController');
-        const color = new cc.Color(gameContext.getRandomInt(0, 255), gameContext.getRandomInt(0, 255), gameContext.getRandomInt(0, 255));
-        foodController.init(pos, color);
-        foodController.isEated = false;
+        foodController.setSeedId(foodIndex);
+        foodController.init(mapWidth, mapHeight);
         foodNode.parent = this.foodContainer;
     }
     // 生成蛇
@@ -149,60 +154,44 @@ export default class MapController extends cc.Component {
         snakeNode.parent = this.snakeContainer;
         return SnakeController;
     }
-    // 每过一次逻辑帧(拿到地图信息,进行地图食物的生成,把食物生成到一个量级)
-    updateMap() {
-        // 回收每个死掉的蛇,没死就移动它
-        let roomSnakeCount = 0; // 现在房间的总人数
-        this.snakeContainer.children.forEach(child => {
-            const snakeController = child.getComponent(SnakeController);
-            if (snakeController.isKiided) {
-                this.createDieFoodBySnakeController(snakeController);
-                this.snakePool.put(child);
-            } else {
-                snakeController.move();
-                roomSnakeCount ++;
-            }
-        });
-        // 根据蛇的数量来判断是否加入ai(预留几个位置给玩家)
-        // 每次更新最多加一个ai，如果玩超过最大减去预留位置，就不再产生ai
-        if (this.clientFrameCount % this.stepMakeAi === 0 && roomSnakeCount < this.roomMaxCount) {
-            this.createAiSnake();
-        }
-        // 把所有的被吃掉的食物推到池里(把被吃掉的食物换个地方产生)
-        this.foodContainer.children.forEach(child => {
-            const foodController = child.getComponent(FoodController);
-            if (!foodController.isEated) {
-                return;
-            }
-            if (foodController.foodType = foodController.Type.normal) {
-                this.normalFoodPool.put(foodController.node);
-                this.addRandomPosFood();
-            } else {
-                this.dieFoodPool.put(foodController.node);
-            }
-        });
-        this.clientFrameCount += 1;
-    }
     // 初始化一条Ai蛇
-    createAiSnake() {
-        const gameId = this.clientFrameCount;
+    createAiSnake(aINumber) {
         const initLength = gameContext.getRandomInt(5, 15);
-        const initplaceX = gameContext.getRandomInt(1, 200);
-        const initplaceY = gameContext.getRandomInt(1, 200);
-        
+        const initplaceX = gameContext.getRandomInt(100, 900);
+        const initplaceY = gameContext.getRandomInt(10, 600);
+        const initDeg = gameContext.getRandomInt(0, 360);
         const aiSnakeData = { // 玩家数据(要包括自己的数据)
-            gameId: gameId,
+            gameId: aINumber,
             userId: 233,
-            name: `AI${gameId}`, // 玩家名字
+            name: `AI${aINumber}`, // 玩家名字
             snakeData: [], // 蛇的数据
-            teamId: '', // 组队id
             score: 0, // 分数
-            aiNumber: 2323, // '' ai的编号
+            aiNumber: aINumber, // '' ai的编号
+            deg: initDeg,
         };
         for(let i = 0; i < initLength; i ++) {
-            aiSnakeData.snakeData.push(cc.v2(500 - i * 10+initplaceX, 100+initplaceY));
+            aiSnakeData.snakeData.push(cc.v2(initplaceX - i * 10, initplaceY));
         }
-        this.createSnake(aiSnakeData);
+        return this.createSnake(aiSnakeData);
+    }
+    // 每过一次逻辑帧(拿到地图信息,进行地图食物的生成,把食物生成到一个量级)
+    updateMap() {  }
+    // 初始化地图
+    initMap(playsData: any[]) {
+        this.makeInitFoods();
+        for(let i = 0; i < this.roomMaxCount; i++) {
+            if (playsData[i]) {
+                this.createSnake(playsData[i]);
+            } else {
+                this.createAiSnake(i);
+            }
+        }
+    }
+    // 得到所有蛇的控制器
+    public getSnakeController(): SnakeController[] {
+        return this.snakeContainer.children.map(child => {
+            return child.getComponent(SnakeController);
+        });
     }
     // 重置map
     public resetMap() {

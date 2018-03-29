@@ -8,6 +8,7 @@ import EnumModule from '../module/business/EnumModule';
 import GameModule from './business/GameModule';
 import NetModule from './service/NetModule';
 import CmdModule from './business/CmdModule';
+import LocalStroageModule from './service/LocalStroageModule';
 
 enum ModuleDef {
     LoginModule = 'LoginModule',
@@ -18,6 +19,7 @@ enum ModuleDef {
     GameModule = 'GameModule',
     NetModule = 'NetModule',
     CmdModule = 'CmdModule',
+    LocalStroageModule = 'LocalStroageModule',
 };
 
 class ModuleManage extends BaseModuleManage {
@@ -30,6 +32,7 @@ class ModuleManage extends BaseModuleManage {
     GameModule: GameModule;
     NetModule: NetModule;
     CmdModule: CmdModule;
+    LocalStroageModule: LocalStroageModule;
     EnumModule: any = {};
     // 共有的模块(默认会初始化)
     public commonModules: ModuleDef[] = [

@@ -4,8 +4,13 @@ const {ccclass, property} = cc._decorator;
 
 @ccclass
 export default class MainScene extends BaseScene {
+    protected needModules(ModuleDef?: any) {
+        const { NetModule } = ModuleDef;
+        return [NetModule];
+    }
     OnLoad() {
         this.Log('进入主大厅');
+        // this.moduleManage.NetModule.connect();
         this.node.on('endlessGame', (ev) => {
             this.endlessGame();
             ev.stopPropagation();
@@ -24,7 +29,14 @@ export default class MainScene extends BaseScene {
         this.moduleManage.SceneModule.EnterEndLessGame();
     }
     timeLimitSingle() {
-        this.moduleManage.SceneModule.EnterTimeLimitSingleGame();
+        // 进行匹配
+        this.moduleManage.NetModule.matchRoom((err, roomData) => {
+            if (err) {
+                cc.log('匹配失败');
+                return;
+            }
+            this.moduleManage.SceneModule.EnterTimeLimitSingleGame();
+        });
     }
     timeLimitTeam() {
         this.moduleManage.SceneModule.EnterTimeLimitTeamGame();
