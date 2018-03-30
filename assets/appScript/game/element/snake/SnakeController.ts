@@ -21,7 +21,7 @@ export default class SnakeController extends cc.Component {
     //     tooltip: 'ai碰撞探测器',
     // })
     // aiDetector = null;
-
+    private initData = null;
     private curDegress = 0; // 目前的角度
     public headerControll: SnakeHeadNodeController | null = null;
     public gameId;
@@ -29,10 +29,10 @@ export default class SnakeController extends cc.Component {
     public controllDeg = 0; // 进度方向(deg)
     public score = 0; // 本条蛇的分数
     public isSaveState = true; // 是否是受保护状态
-    public snakeData: any = {};
     public isKilled = false; // 是否死掉了
     public skinStep = 2; // 多少个节点生成一个皮肤节点
     public isAi = false; // 是否是ai
+    private seedId = '';
     
     private bodyNodePool = new cc.NodePool(); // 身体节点池
     private putInBodyPool(bodyNode: cc.Node) {
@@ -56,7 +56,9 @@ export default class SnakeController extends cc.Component {
         headerControll.moveNext(targetPoint);
     }
     init(data) {
-        const { gameId, userId, name, snakeData, teamId, score, aiNumber, deg } = data;
+        this.initData = data;
+        const randomData = this.makeRandomData(data);
+        const { gameId, userId, name, teamId, score, snakeData, aiNumber, deg } = randomData;
         this.gameId = gameId;
         this.score = score || 0;
         this.isSaveState = true;
@@ -66,8 +68,7 @@ export default class SnakeController extends cc.Component {
         this.isQuickSpeed = false;
         this.isAvoidCd = false;
         this.isAi = !!aiNumber;
-        this.snakeData = data;
-        this.create(snakeData);
+        this.createSnakeNodes(snakeData);
         this.controllDeg = 0;
         if (deg) {
             this.controllDeg = deg;
@@ -79,6 +80,37 @@ export default class SnakeController extends cc.Component {
         gameContext.scheduleOnce(() => {
             this.isSaveState = false;
         }, 30);
+    }
+    // 设置子种子的唯一id
+    setSeedId(seedId) {
+        this.seedId = seedId;
+    }
+    // 初始化的随机次数
+    private initSeedCount = 0;
+    private initRandom(min, max) {
+        this.initSeedCount += 1;
+        const seedRandom = `${gameContext.randomSeed}snakeInit${this.seedId}${this.initSeedCount}`;
+        return gameContext.getRandomIntBySeed(min, max, seedRandom)
+    }
+    // 创建随机数据 
+    private makeRandomData(data = {}): any {
+        const initLength = this.initRandom(5, 15);
+        const initplaceX = this.initRandom(100, 900);
+        const initplaceY = this.initRandom(10, 600);
+        const initDeg = this.initRandom(0, 360);
+        console.log('create snake:', initLength, initplaceX, initplaceY, initDeg)
+        const aiSnakeData = { // 玩家数据(要包括自己的数据)
+            snakeData: [], // 蛇的数据
+            score: 0, // 分数
+            deg: initDeg,
+        };
+        for(let i = 0; i < initLength; i ++) {
+            aiSnakeData.snakeData.push(cc.v2(initplaceX - i * gameContext.snakeNodeRadius * 2, initplaceY));
+        }
+        return {
+            ...aiSnakeData,
+            ...data,
+        };
     }
     // 当死亡时(把每个节点放回实体工厂,然后发布信息信息出去)
     public onDie() {
@@ -99,7 +131,13 @@ export default class SnakeController extends cc.Component {
         this.removeListener();
         this.preAddedControll = null;
         this.headerControll = null;
-        this.snakeData = null;
+    }
+    // 复活
+    relife() {
+        if (!this.initData) {
+            return;
+        }
+        this.init(this.initData);
     }
     // 监听
     listener() {
@@ -111,10 +149,11 @@ export default class SnakeController extends cc.Component {
         // this.node.on('foodPrice', this.collisionPrice, this);
     }
     
-    private seedCount = 0;
-    random(min, max) {
-        this.seedCount += 1;
-        return gameContext.getRandomIntBySeed(min, max, `${gameContext.randomSeed}snake${this.gameId}${this.seedCount}`);
+    private avoidCount = 0;
+    avoidRandom(min, max) {
+        this.avoidCount += 1;
+        const seedRandom = `${gameContext.randomSeed}snakeAvoid${this.seedId}${this.avoidCount}`;
+        return gameContext.getRandomIntBySeed(min, max, seedRandom);
     }
     // 避免危险
     private isAvoidCd = false;
@@ -126,7 +165,7 @@ export default class SnakeController extends cc.Component {
         gameContext.scheduleOnce(() => {
             this.isAvoidCd = false;
         }, 3);
-        const controllDeg = (+this.controllDeg + this.random(90, 180)) % 360;
+        const controllDeg = (+this.controllDeg + this.avoidRandom(90, 180)) % 360;
         this.controllDeg = controllDeg;
     }
     // collisionPrice() {}
@@ -206,7 +245,7 @@ export default class SnakeController extends cc.Component {
         snakeNode.active = true;
     }
     // 通过一段数组position来创建蛇 cc.v2[]
-    public create(snakeInitPoints: cc.Vec2[]) {
+    public createSnakeNodes(snakeInitPoints: cc.Vec2[]) {
         if (!snakeInitPoints || snakeInitPoints.length < 1) {
             cc.error('创建坐标数组至少为一');
             return;

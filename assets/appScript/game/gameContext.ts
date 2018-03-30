@@ -44,18 +44,17 @@ enum EventType {
 // 游戏的上下文(提供一些全局的东西)
 class GameContext {
     // 服务器60ms一次操作cmd(每秒15个响应,这个游戏就不太会卡顿了)
-    public tickTime = 30; // 游戏逻辑触发事件(每30ms游戏进行一次)
+    public tickTime = 60; // 游戏逻辑触发事件(每--ms游戏进行一次)
     public snakeNodeRadius: number = 5; // 每个骨骼节点的半径
     public snakeNodeSkinRadius: number = 16; // 皮肤节点的半径
-    public normalSpeed: number = 5; // 蛇正常的移动速度
-    public quickSpped: number = 10; // 蛇加速的移动速度
+    public normalSpeed: number = 10; // 蛇正常的移动速度
+    public quickSpped: number = 20; // 蛇加速的移动速度
     public EventType = EventType; // 全局事件
     public roomCount = 0; // 房间的总人数
     public roomPlayerCount = 0; // 房间的玩家人数
     public gameId: string | number; // 用户的房间游戏id
     public roomId: string | number; // 房间号
     public randomSeed: string | number = 'test233'; // 随机种子
-    public isAutoCreateAi: boolean = false;
     public netFrame = 0; // 客户端现在的网络帧
     public clientFrame = 0;
     // 精度处理

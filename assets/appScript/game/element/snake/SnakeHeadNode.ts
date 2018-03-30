@@ -10,7 +10,7 @@ export default class SnakeHeadNode extends SnakeNode {
     public aroundFood = []; // 周边的食物
     public aroundSnakeNode = []; // 周边的蛇节点
     OnLoad() {
-        this.circleCollider.radius = gameContext.snakeNodeSkinRadius * 5;
+        this.circleCollider.radius = gameContext.snakeNodeSkinRadius * 3;
     }
     onCollisionEnter(other: cc.CircleCollider, self) {
         if (other.node.parent === self.node.parent) {

@@ -9,7 +9,6 @@ export default class EndLessMapController extends BaseMapController {
     updateMap() {
         console.log('update map:' + gameContext.clientFrame);
         // 可以利用gameContext的updateTick方法,把判断逻辑抽取到各个组件自行判断。(但是不实现)
-        let roomSnakeCount = 0; // 现在房间的总人数
         this.snakeContainer.children.forEach(child => {
             const snakeController = child.getComponent(SnakeController);
             const headerControll = snakeController.headerControll;
@@ -27,9 +26,9 @@ export default class EndLessMapController extends BaseMapController {
             const { width: mapWidth, height: mapHeight } = this.node;
             if (minX <= this.wallWidth || maxX >= mapWidth - this.wallWidth
                 || minY <= this.wallWidth || maxY >= mapHeight - this.wallWidth) {
-                    console.log('onCollsionWall');
+                    console.log('onCollsionWall'); 
                     snakeController.onCollsionWall();
-                }
+                } 
             if (snakeController.isAi) {
                 const wallWarnDis = 10; // 墙的警戒距离
                 if (minX - wallWarnDis <= this.wallWidth || maxX + wallWarnDis >= mapWidth - this.wallWidth
@@ -42,12 +41,12 @@ export default class EndLessMapController extends BaseMapController {
             aroundFood.forEach((foodControl: FoodController) => {
                 const foodPoint = cc.v2(foodControl.node.position);
                 const dis = gameContext.reducePrecision(curPos.sub(foodPoint).mag());
-                if (dis <= snakeRadius + foodControl.radius) {
+                if (dis <= snakeRadius + foodControl.radius + 5) {
                     console.log(`eat food${dis}`)
                     snakeController.onEatFood(foodControl);
                 }
             });
-            // 对数组进行排序,使他们的计算顺序一样
+            // 对数组进行排序,使他们的计算顺序一样(也可以改成距离最近的杀死的)
             aroundSnakeNode.sort((controller1, controller2) => {
                 return controller1.node.parent.getComponent(SnakeController).gameId - controller2.node.parent.getComponent(SnakeController).gameId;
             });
@@ -74,15 +73,16 @@ export default class EndLessMapController extends BaseMapController {
             // 回收每个死掉的蛇,没死就移动它
             if (snakeController.isKilled) {
                 this.createDieFoodBySnakeController(snakeController);
-                this.snakePool.put(child);
+                // 如果使ai死掉直接换个地方复活(玩家的话，要等待按确认之后才复活)
+                if (snakeController.isAi) {
+                    gameContext.scheduleOnce(() => {
+                        snakeController.relife();
+                    }, 30);
+                }
             } else {
                 snakeController.move();
-                roomSnakeCount ++;
             }
         });
-
-        // 把死掉的ai蛇换个地方出生
-        // ...
 
         // 把所有的被吃掉的食物推到池里(把被吃掉的食物换个地方产生)
         this.foodContainer.children.forEach(child => {

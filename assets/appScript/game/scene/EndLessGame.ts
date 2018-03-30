@@ -15,32 +15,14 @@ export default class EndLessGame extends BaseGameScene {
         this.gameContext.gameId = userGameId;
         this.gameId = userGameId;
         this.gameContext.roomId = 0;
-        const playsData = [ // 玩家数据(要包括自己的数据)
+        // 玩家数据(要包括自己的数据)(单机模式下,玩家数据只有1)
+        const playsData = [
             {
                 gameId: 0,
                 uid: 3434,
                 name: 'knight', // 玩家名字
-                snakeData: [
-                    {
-                        x: 500,
-                        y: 50,
-                    },
-                    {
-                        x: 490,
-                        y: 50,
-                    },
-                    {
-                        x: 480,
-                        y: 50,
-                    },
-                    {
-                        x: 470,
-                        y: 50,
-                    },
-                ], // 蛇的数据
             },
         ];
-        this.gameContext.isAutoCreateAi = true;
         this._playsData = playsData;
         this.onLoadPlayerData(playsData);  
     }
@@ -68,8 +50,8 @@ export default class EndLessGame extends BaseGameScene {
     }
     OnSelfSnakeDie() {
         // 单机模式(花不花钱，主要在于新生成的蛇会不会保留数组而已)
-        cc.log('self snake die -> 弹出提示操作(花钱立即复活，不花钱重新开始)');
-        // 重新开始 
+        cc.log('self snake die -> 弹出提示操作(点击重新开始)');
+        // 重新开始(暂时不实现这个功能)
         // this.scheduleOnce(() => {
         //     this.reStartGame(this._playsData);
         // }, 1);
