@@ -53,8 +53,8 @@
     "_scaleY": 1,
     "_position": {
       "__type__": "cc.Vec2",
-      "x": 0,
-      "y": 0
+      "x": 587,
+      "y": 529
     },
     "_skewX": 0,
     "_skewY": 0,
@@ -72,7 +72,7 @@
     },
     "_enabled": true,
     "_targets": [],
-    "zoomRatio": 1
+    "zoomRatio": 1.2
   },
   {
     "__type__": "0b278MuZA1MSbUDZTABrsOW",
@@ -89,7 +89,7 @@
       "__id__": 1
     },
     "asset": {
-      "__id__": 0
+      "__uuid__": "97247e4c-9430-455a-bea1-2de9eac56e4b"
     },
     "fileId": "14dLw29ZpCBZNtUik147du",
     "sync": false

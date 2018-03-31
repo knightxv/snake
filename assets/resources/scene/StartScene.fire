@@ -93,8 +93,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 960,
-      "height": 640
+      "width": 1360,
+      "height": 760
     },
     "_rotationX": 0,
     "_rotationY": 0,
@@ -102,8 +102,8 @@
     "_scaleY": 1,
     "_position": {
       "__type__": "cc.Vec2",
-      "x": 480,
-      "y": 320
+      "x": 680,
+      "y": 380
     },
     "_skewX": 0,
     "_skewY": 0,
@@ -148,8 +148,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 960,
-      "height": 640
+      "width": 1360,
+      "height": 760
     },
     "_rotationX": 0,
     "_rotationY": 0,
@@ -334,11 +334,11 @@
     "_enabled": true,
     "_designResolution": {
       "__type__": "cc.Size",
-      "width": 960,
-      "height": 640
+      "width": 1360,
+      "height": 760
     },
-    "_fitWidth": false,
-    "_fitHeight": true
+    "_fitWidth": true,
+    "_fitHeight": false
   },
   {
     "__type__": "478cf6nn41GOadCSTY5+LQv",
@@ -366,6 +366,9 @@
     "_components": [
       {
         "__id__": 16
+      },
+      {
+        "__id__": 17
       }
     ],
     "_prefab": null,
@@ -381,13 +384,13 @@
     "_cascadeOpacityEnabled": true,
     "_anchorPoint": {
       "__type__": "cc.Vec2",
-      "x": 0.5,
-      "y": 0.5
+      "x": 0,
+      "y": 0
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 960,
-      "height": 640
+      "width": 1360,
+      "height": 760
     },
     "_rotationX": 0,
     "_rotationY": 0,
@@ -395,8 +398,8 @@
     "_scaleY": 1,
     "_position": {
       "__type__": "cc.Vec2",
-      "x": 480,
-      "y": 320
+      "x": 0,
+      "y": 0
     },
     "_skewX": 0,
     "_skewY": 0,
@@ -418,7 +421,7 @@
       }
     ],
     "_tag": -1,
-    "_active": false,
+    "_active": true,
     "_components": [
       {
         "__id__": 15
@@ -451,8 +454,8 @@
     "_scaleY": 1,
     "_position": {
       "__type__": "cc.Vec2",
-      "x": 0,
-      "y": 0
+      "x": 699,
+      "y": 364
     },
     "_skewX": 0,
     "_skewY": 0,
@@ -565,5 +568,31 @@
       "__id__": 11
     },
     "_enabled": true
+  },
+  {
+    "__type__": "cc.Widget",
+    "_name": "",
+    "_objFlags": 0,
+    "node": {
+      "__id__": 11
+    },
+    "_enabled": true,
+    "isAlignOnce": true,
+    "_target": null,
+    "_alignFlags": 45,
+    "_left": 0,
+    "_right": 0,
+    "_top": 0,
+    "_bottom": 0,
+    "_verticalCenter": 0,
+    "_horizontalCenter": 0,
+    "_isAbsLeft": true,
+    "_isAbsRight": true,
+    "_isAbsTop": true,
+    "_isAbsBottom": true,
+    "_isAbsHorizontalCenter": true,
+    "_isAbsVerticalCenter": true,
+    "_originalWidth": 1360,
+    "_originalHeight": 760
   }
 ]

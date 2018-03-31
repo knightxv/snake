@@ -98,7 +98,6 @@ export default class SnakeController extends cc.Component {
         const initplaceX = this.initRandom(100, 900);
         const initplaceY = this.initRandom(10, 600);
         const initDeg = this.initRandom(0, 360);
-        console.log('create snake:', initLength, initplaceX, initplaceY, initDeg)
         const aiSnakeData = { // 玩家数据(要包括自己的数据)
             snakeData: [], // 蛇的数据
             score: 0, // 分数
@@ -133,8 +132,8 @@ export default class SnakeController extends cc.Component {
         this.headerControll = null;
     }
     // 复活
-    relife() {
-        if (!this.initData) {
+    relive() {
+        if (!this.initData || !this.isKilled) {
             return;
         }
         this.init(this.initData);

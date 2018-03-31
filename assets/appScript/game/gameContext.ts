@@ -54,7 +54,7 @@ class GameContext {
     public roomPlayerCount = 0; // 房间的玩家人数
     public gameId: string | number; // 用户的房间游戏id
     public roomId: string | number; // 房间号
-    public randomSeed: string | number = 'test233'; // 随机种子
+    public randomSeed: string | number = 'test2323'; // 随机种子
     public netFrame = 0; // 客户端现在的网络帧
     public clientFrame = 0;
     // 精度处理
@@ -66,6 +66,10 @@ class GameContext {
     public updateTick() {
         this.clientFrame += 1;
         this.tickCb.forEach((tickObj, index) => {
+            if (Object.prototype.toString.call(tickObj) === '[object Function]') {
+                tickObj();
+                return;
+            }
             tickObj.tickCount -= 1;
             if (tickObj.tickCount == 0) {
                 tickObj.callBack();
@@ -73,12 +77,18 @@ class GameContext {
         });
         this.tickCb = this.tickCb.filter(tickObj => tickObj.tickCount != 0);
     }
-    // 在tickCount(1->30ms)个逻辑帧之后执行某个函数
-    public scheduleOnce(cb, tickCount) { 
+    // 在tickCount(1->60ms)个逻辑帧之后执行某个函数
+    public scheduleOnce(cb, tickCount) {
         this.tickCb.push({
             callBack: cb,
             tickCount,
         });
+    }
+    public schedule(cb) {
+        this.tickCb.push(cb);
+    }
+    public offSchedule(cb) {
+        this.tickCb = this.tickCb.filter(tickObj => tickObj != cb);
     }
     // 通过角度来获取下一步该增加的位移(30ms后会增加位移)
     getDisPosByDeg(deg: number, isQuick: boolean = false): cc.Vec2 {

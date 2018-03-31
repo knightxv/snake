@@ -12,27 +12,33 @@ enum CmdEventType {
 export default class CmdModule extends BaseBusinessModule {
     constructor() {
         super();
-        
+        this.serverTime = null;
     }
+    private serverTime;
     // 开始服务器接受循环
     serverInit() {
+        this.removeNetServer();
         this.listener();
-        setInterval(() => {
+        this.cmdCache = [];
+        this.serverTime = setInterval(() => {
             this.catchUpProgess();
-        }, 60);
+        }, gameContext.tickTime);
+    }
+    removeNetServer() {
+        const NetModule = this.moduleManage.NetModule;
+        NetModule.removeListener(NetModule.Event.onReceiveCmd, this.pushCmd);
+        clearInterval(this.serverTime);
     }
     // 追逐进度
-    catchUpProgess() {
+    catchUpProgess = () => {
         const cacheLen = this.cmdCache.length;
-        console.log('cacheLen:', cacheLen);
-
+        // console.log('cacheLen:', cacheLen);
         // 说明已经落后大于一帧
         while(this.cmdCache.length > 0) {
             const cmd = this.cmdCache.shift();
             const controCmd = cmd.split('#')[0];
             const frameCount = cmd.split('#')[1];
             const disFrame = +frameCount - gameContext.netFrame;
-            console.log('disFrame:', disFrame);
             if (disFrame === 1) {
                 this.emit(CmdEventType.receiveCmd,  controCmd);
                 gameContext.netFrame += 1;
@@ -42,19 +48,17 @@ export default class CmdModule extends BaseBusinessModule {
         }
     }
     private cmdCache = [];
+    pushCmd = (cmd) => {
+        this.cmdCache.push(cmd);
+    }
     listener() {
         const NetModule = this.moduleManage.NetModule;
-        NetModule.on(NetModule.Event.onReceiveCmd, (cmd) => {
-            this.cmdCache.push(cmd);
-            // const controCmd = cmd.split('#')[0];
-            // const frameCount = cmd.split('#')[1];
-            // // 对收到的请求进行缓存(>=60ms)
-            // this.cmdCache.push(`${controCmd}#${+frameCount + 1}`);
-        });
+        NetModule.removeListener(NetModule.Event.onReceiveCmd, this.pushCmd);
+        NetModule.on(NetModule.Event.onReceiveCmd, this.pushCmd);
     }
     // 当收到服务器的命令时 ['1:30!&3:10&4:80', ...]
     public EventType = CmdEventType;
-    // 发送命令给服务区
+    // 发送命令给服务器
     sendCmdToServer(deg: number, isQuick: boolean) {
         // 调用Net模块发送命令(如果是联机模式的话)'
         const NetModule = this.moduleManage.NetModule;

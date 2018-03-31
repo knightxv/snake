@@ -83,8 +83,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 960,
-      "height": 640
+      "width": 1360,
+      "height": 760
     },
     "_rotationX": 0,
     "_rotationY": 0,
@@ -92,8 +92,8 @@
     "_scaleY": 1,
     "_position": {
       "__type__": "cc.Vec2",
-      "x": 480,
-      "y": 320
+      "x": 680,
+      "y": 380
     },
     "_skewX": 0,
     "_skewY": 0,
@@ -112,11 +112,11 @@
     "_enabled": true,
     "_designResolution": {
       "__type__": "cc.Size",
-      "width": 960,
-      "height": 640
+      "width": 1360,
+      "height": 760
     },
-    "_fitWidth": false,
-    "_fitHeight": true
+    "_fitWidth": true,
+    "_fitHeight": false
   },
   {
     "__type__": "571ebSX7LtGmoPlpF409e+a",
@@ -130,7 +130,7 @@
       "__uuid__": "1aa78839-672a-45a3-b769-4a3fd26e9564"
     },
     "mapPrefab": {
-      "__uuid__": "c2f0e923-1785-45da-91a1-22831308e338"
+      "__uuid__": "4a89b1d5-1efb-4027-9922-b3b5a95be53b"
     },
     "cameraPrefab": {
       "__uuid__": "97247e4c-9430-455a-bea1-2de9eac56e4b"

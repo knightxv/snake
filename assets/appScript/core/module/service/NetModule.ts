@@ -53,7 +53,13 @@ export default class NetModule extends BaseNetModule {
             cmd
         });
     }
-
+    disconnect() {
+        this.pomelo.disconnect();
+    }
+    quitGame() {
+        this.request("snake.gameHandler.quitGame", {}, function(errMsg, roomData) {
+        });
+    }
     matchRoom(cb?: Function) {
         this.request("snake.roomHandler.matchSingerRoom", {}, function(errMsg, roomData) {
             if (errMsg) {
@@ -75,20 +81,34 @@ export default class NetModule extends BaseNetModule {
             }
             cb(null, userData);
         });
-
+    }
+    // 复活
+    reliveSnake(gameId) {
+        this.request("snake.gameHandler.reliveSnake", { gameId }, function(errMsg, roomData) {
+            // if (errMsg) {
+            //     cb(errMsg);
+            //     return;
+            // }
+            // cb && cb(null, roomData);
+        });
     }
     request(route, params, cb) {
-        this.pomelo.request(route, params, function(res) {
-            console.group(`socket request: ${route}`);
-            console.log('params:', params);
-            console.log('response:', res);
-            console.groupEnd();
-            const { code, msg, data } = res;
-            if (code != 200) {
-                cb(msg);
-                return;
-            }
-            cb(null, data)
-        });
+        try {
+            this.pomelo.request(route, params, function(res) {
+                console.group(`socket request: ${route}`);
+                console.log('params:', params);
+                console.log('response:', res);
+                console.groupEnd();
+                const { code, msg, data } = res;
+                if (code != 200) {
+                    cb(msg);
+                    return;
+                }
+                cb(null, data)
+            });
+        } catch (error) {
+            cb('无法连接网络');
+            return;
+        }
     }
 }

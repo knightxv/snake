@@ -41,8 +41,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 0,
-      "height": 0
+      "width": 74.72,
+      "height": 40
     },
     "_rotationX": 0,
     "_rotationY": 0,
@@ -73,9 +73,6 @@
     },
     "snakeBodyPrefab": {
       "__uuid__": "eadd62ac-cb97-4853-9e26-256cda5ef547"
-    },
-    "aiDetector": {
-      "__uuid__": "c377cb3c-6756-48b5-b4b4-416d614fb17f"
     }
   },
   {

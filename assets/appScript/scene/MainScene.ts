@@ -32,13 +32,14 @@ export default class MainScene extends BaseScene {
         // 进行匹配
         this.moduleManage.NetModule.matchRoom((err, roomData) => {
             if (err) {
-                cc.log('匹配失败');
+                this.openMsgBox('匹配失败');
                 return;
             }
             this.moduleManage.SceneModule.EnterTimeLimitSingleGame();
         });
     }
     timeLimitTeam() {
-        this.moduleManage.SceneModule.EnterTimeLimitTeamGame();
+        // this.moduleManage.SceneModule.EnterTimeLimitTeamGame();
+        this.openMsgBox('暂未开放');
     }
 }

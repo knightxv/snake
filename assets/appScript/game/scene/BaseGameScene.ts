@@ -76,7 +76,7 @@ export default class BaseGameScene extends BaseScene {
         this.Log('rewrite OnStart to init game');
     }
     OnSelfSnakeDie() {}
-    TickUpdate() {}
+    
     // 当玩家数据加载完成时(通过初始化的房间数据来初始化游戏)
     protected onLoadPlayerData(playsData: any[]) {
         this.gameId = this.gameContext.gameId;
@@ -122,6 +122,7 @@ export default class BaseGameScene extends BaseScene {
     tickUpdate() {
         this.TickUpdate();
     }
+    TickUpdate() {}
     // 停止发送玩家命令(对于单机，停止游戏，对于联机中止玩家输出，其他玩家的操作还在继续)
     protected stopTickUpdate() {
         this.unschedule(this.tickUpdate);
@@ -164,7 +165,7 @@ export default class BaseGameScene extends BaseScene {
         if (snakeKilled.gameId === this.gameId) {
             this.onSelfSnakeDie();
         }
-        delete this.idControllerMap [snakeKilled.gameId];
+        // delete this.idControllerMap [snakeKilled.gameId];
         // snakeKill, snakeKilled
         this.Log(`${snakeKill.gameId}杀死了${snakeKilled.gameId}`);
     }
@@ -178,7 +179,7 @@ export default class BaseGameScene extends BaseScene {
         if (snakeKilledGameId == this.gameId) {
             this.onSelfSnakeDie();
         }
-        delete this.idControllerMap [snakeKilledGameId];
+        // delete this.idControllerMap [snakeKilledGameId];
         this.Log(`${snakeKilledGameId}被墙撞死了`);
     }
     // 进行逻辑处理（只进行渲染和游戏帧率控制，就是说用这个函数可以进行加速播放和断线重连等操作）
@@ -187,6 +188,7 @@ export default class BaseGameScene extends BaseScene {
         gameContext.updateTick();
         this.mapController.updateMap();
         const playerCmds = this.moduleManage.CmdModule.resolveCmds(cmd);
+        // 控制
         playerCmds.forEach(data => {
             const { gameId, deg, isQuick} = data;
             if (this.idControllerMap[gameId]) {
@@ -194,7 +196,24 @@ export default class BaseGameScene extends BaseScene {
                 this.idControllerMap[gameId].isQuickSpeed = isQuick;
             }
         });
+        // 复活
+        if (/\(.+\)/.test(cmd)) {
+            const reliveArr = cmd.split('(')[1].split(')')[0].split(',');
+            reliveArr && reliveArr.forEach(gameId => {
+                this.idControllerMap[gameId] && this.idControllerMap[gameId].relive();
+                if (gameId == gameContext.gameId) {
+                    this.onSelfSnakeRelive();
+                }
+            });
+            
+        }
     }
+    // 当自己的蛇复活时
+    onSelfSnakeRelive() {
+        this.setMapAutoFollow();
+        this.OnSelfSnakeRelive();
+    }
+    OnSelfSnakeRelive() {}
     // 当用户进行控制时(夹角弧度)
     onDirController(ev) {
         const { dirRad } = ev.detail;
