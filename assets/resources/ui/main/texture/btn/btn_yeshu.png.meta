@@ -1,0 +1,30 @@
+{
+  "ver": "1.0.0",
+  "uuid": "eebc85bb-19a0-4e98-bae0-20bf69f10942",
+  "type": "sprite",
+  "wrapMode": "clamp",
+  "filterMode": "bilinear",
+  "subMetas": {
+    "btn_yeshu": {
+      "ver": "1.0.3",
+      "uuid": "c07a5bc9-9f42-4161-a920-3a8631a60167",
+      "rawTextureUuid": "eebc85bb-19a0-4e98-bae0-20bf69f10942",
+      "trimType": "auto",
+      "trimThreshold": 1,
+      "rotated": false,
+      "offsetX": 0,
+      "offsetY": 0,
+      "trimX": 0,
+      "trimY": 0,
+      "width": 65,
+      "height": 48,
+      "rawWidth": 65,
+      "rawHeight": 48,
+      "borderTop": 0,
+      "borderBottom": 0,
+      "borderLeft": 0,
+      "borderRight": 0,
+      "subMetas": {}
+    }
+  }
+}

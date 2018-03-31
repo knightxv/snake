@@ -3,6 +3,7 @@ const {ccclass, property} = cc._decorator;
 
 @ccclass
 export default class ClientManage extends cc.Component {
+
     onLoad() {
         cc.game.addPersistRootNode(this.node);
         moduleManage.addModule('ClientManage', this);
